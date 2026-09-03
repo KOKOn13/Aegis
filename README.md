@@ -1,6 +1,9 @@
-# Acopio — Sistema de Gestión de Donaciones
+# Aegis — Sistema de Gestión de Donaciones
 
 > Hackathon 2026 · Equipo **Larpers**
+> Enrique Alejandro Herrera Reynosa 25479
+> Pablo Cerda Calvillo 25752
+> Joseph Alexander Perez rivera 26045
 
 ---
 
