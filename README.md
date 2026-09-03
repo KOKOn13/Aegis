@@ -1,15 +1,12 @@
-# Aegis — Sistema de Gestión de Donaciones
+# Acopio — Sistema de Gestión de Donaciones
 
-> Hackathon 2026 · Equipo **Larpers**
-> Enrique Alejandro Herrera Reynosa 25479
-> Pablo Cerda Calvillo 25752
-> Joseph Alexander Perez rivera 26045
+> Hackathon 2026 · Equipo **ByteForce**
 
 ---
 
 ## Descripción del proyecto
 
-**Aegis** es una plataforma web para la gestión integral de centros de acopio de donaciones en México. Permite registrar, rastrear y redistribuir artículos donados entre múltiples centros de recolección, campañas y organizaciones receptoras, todo en tiempo real y con roles diferenciados por tipo de usuario.
+**Acopio** es una plataforma web para la gestión integral de centros de acopio de donaciones en México. Permite registrar, rastrear y redistribuir artículos donados entre múltiples centros de recolección, campañas y organizaciones receptoras, todo en tiempo real y con roles diferenciados por tipo de usuario.
 
 ### Diferenciador principal — Redistribución automática inteligente
 
@@ -36,7 +33,7 @@ Los centros de acopio en México operan de forma aislada: uno acumula arroz mien
 
 ## Alcance del MVP — Checklist de criterios de aceptación
 
-### Implementado 
+### Implementado ✅
 
 - [x] Autenticación por rol con sesión persistente (`localStorage`)
 - [x] 5 dashboards diferenciados: coordinador, encargado, voluntario, institución, líder de campaña
@@ -55,7 +52,7 @@ Los centros de acopio en México operan de forma aislada: uno acumula arroz mien
 - [x] Modo oscuro / claro persistente
 - [x] Dashboard del encargado con info de su centro, KPIs de entradas/salidas/mermas e historial reciente
 
-### No implementado (fuera de alcance) 
+### No implementado (fuera de alcance) ❌
 
 - [ ] Hash de contraseñas — actualmente texto plano (solo demo)
 - [ ] WebSockets para sincronización multi-usuario en tiempo real

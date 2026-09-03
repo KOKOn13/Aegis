@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es" id="root">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Voluntario — Acopio</title>
+<link rel="stylesheet" href="/shared.css">
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar" id="sidebar">
+  <div class="flex items-center" style="gap:10px;margin-bottom:14px">
+    <div class="app-mark">A</div>
+    <div>
+      <div style="font-size:15px;font-weight:700">Acopio</div>
+      <div class="user-role" id="sb-role">—</div>
+    </div>
+  </div>
+
+  <div style="padding:10px 12px;border-radius:10px;background:var(--s1);border:1px solid var(--b);margin-bottom:8px">
+    <div style="font-size:13px;font-weight:600" id="sb-name">—</div>
+    <div class="text-xs t2 mt-1" id="sb-centro">—</div>
+  </div>
+
+  <div class="nav-section">Mis tareas</div>
+  <button class="nav-item active" onclick="showSec('inventario',this)">Inventario</button>
+  <button class="nav-item" onclick="showSec('historial',this)">Mis registros</button>
+
+  <div class="nav-section">Registrar</div>
+  <button class="nav-item" onclick="setTipo('recepcion');showSec('registrar',this)">Recepción</button>
+  <button class="nav-item" onclick="setTipo('entrega');showSec('registrar',this)">Entrega</button>
+
+  <div style="flex:1"></div>
+  <div style="border-top:1px solid var(--b);padding-top:12px;display:flex;gap:8px">
+    <button class="theme-btn" onclick="toggleTheme()"><span class="theme-icon"></span></button>
+    <button class="btn btn-ghost flex-1" onclick="logout()">Salir</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="flex items-center justify-between" style="margin-bottom:24px">
+    <div>
+      <div class="page-title" id="page-title">Inventario del centro</div>
+      <div class="page-sub">Solo puedes registrar recepciones y entregas</div>
+    </div>
+    <div id="campana-badge" class="g t2" style="padding:6px 14px;border-radius:8px;font-size:12px">Cargando…</div>
+  </div>
+
+  <!-- INVENTARIO (default) -->
+  <div id="sec-inventario">
+    <div class="grid3" style="margin-bottom:20px">
+      <div class="card g"><div class="kpi-label">Total en stock</div><div class="kpi-num" id="kpi-stock">—</div></div>
+      <div class="card g"><div class="kpi-label">Artículos distintos</div><div class="kpi-num" id="kpi-tipos">—</div></div>
+      <div class="card g"><div class="kpi-label">Mis movimientos hoy</div><div class="kpi-num" id="kpi-hoy">—</div></div>
+    </div>
+    <div class="section-title">Stock disponible</div>
+    <div class="tbl-wrap g">
+      <table class="tbl">
+        <thead><tr><th>Artículo</th><th>Categoría</th><th>Unidad</th><th>Stock</th></tr></thead>
+        <tbody id="inv-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div id="sec-historial" class="hidden">
+    <div class="tbl-wrap g">
+      <table class="tbl">
+        <thead><tr><th>Fecha</th><th>Tipo</th><th>Artículo</th><th>Cantidad</th><th>Detalle</th></tr></thead>
+        <tbody id="hist-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- REGISTRAR -->
+  <div id="sec-registrar" class="hidden">
+    <div class="card g" style="max-width:520px">
+      <div class="section-title" id="form-title">Registrar movimiento</div>
+      <form id="form-mov" onsubmit="submitMov(event)" style="display:grid;gap:14px">
+        <div>
+          <label class="lbl">Tipo</label>
+          <select id="sel-tipo" onchange="onTipoChange()">
+            <option value="recepcion">Recepción (donación)</option>
+            <option value="entrega">Entrega / Canalización</option>
+          </select>
+        </div>
+        <div>
+          <div class="flex items-center justify-between" style="margin-bottom:5px">
+            <label class="lbl" style="margin:0">Artículo *</label>
+            <button type="button" class="btn-icon" onclick="openModalNuevoArt()" title="Crear nuevo artículo" style="width:26px;height:26px;border-radius:6px;font-size:16px;line-height:1">+</button>
+          </div>
+          <div id="ac-articulo-vol"></div>
+        </div>
+        <div class="grid2">
+          <div>
+            <label class="lbl">Cantidad *</label>
+            <input type="number" id="inp-cantidad" min="0.01" step="0.01" placeholder="0" required>
+          </div>
+          <div id="campo-inst" class="hidden">
+            <label class="lbl">Institución receptora *</label>
+            <select id="sel-inst"><option value="">— selecciona —</option></select>
+          </div>
+        </div>
+        <!-- Donante: solo visible en recepcion -->
+        <div id="campo-donante" class="hidden">
+          <div style="border:1px solid var(--b2);border-radius:12px;padding:14px;background:var(--s1)">
+            <div class="flex items-center justify-between" style="margin-bottom:10px">
+              <label class="lbl" style="margin:0;color:var(--t1);font-size:12px;font-weight:600">Donante</label>
+              <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
+                <input type="checkbox" id="chk-anonimo" checked onchange="toggleAnonimo()">
+                <span class="text-xs t2">Anónimo</span>
+              </label>
+            </div>
+            <div id="donante-fields" class="hidden" style="display:grid;gap:10px">
+              <input id="inp-donante-nombre" placeholder="Nombre del donante *">
+              <div class="grid2">
+                <select id="sel-donante-tipo">
+                  <option value="persona">Persona</option>
+                  <option value="empresa">Empresa</option>
+                  <option value="institucion">Institución</option>
+                  <option value="gobierno">Gobierno</option>
+                </select>
+                <input id="inp-donante-contacto" placeholder="Contacto (opcional)">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="lbl">Observaciones</label>
+          <input type="text" id="inp-obs" placeholder="Opcional">
+        </div>
+        <div id="err-mov" class="text-xs t-err hidden"></div>
+        <button type="submit" class="btn btn-solid w-full">Guardar</button>
+      </form>
+    </div>
+  </div>
+</main>
+</div>
+
+<!-- Modal: Nuevo artículo rápido -->
+<div class="overlay hidden" id="modal-nuevo-art">
+  <div class="modal g-hi">
+    <div class="modal-title">Nuevo Artículo</div>
+    <form id="form-nuevo-art" onsubmit="submitNuevoArt(event)" style="display:grid;gap:14px">
+      <div><label class="lbl">Nombre *</label><input id="na-nombre" placeholder="Ej. Arroz" required></div>
+      <div class="grid2">
+        <div><label class="lbl">Categoría *</label>
+          <select id="na-categoria">
+            <option value="no_perecedero">No perecedero</option>
+            <option value="perecedero">Perecedero</option>
+            <option value="ropa">Ropa</option>
+            <option value="limpieza">Limpieza</option>
+            <option value="medicamento">Medicamento</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+        <div><label class="lbl">Unidad *</label>
+          <select id="na-unidad">
+            <option value="pieza">Pieza</option>
+            <option value="kg">Kilogramo (kg)</option>
+            <option value="l">Litro (l)</option>
+            <option value="bolsa">Bolsa</option>
+            <option value="caja">Caja</option>
+          </select>
+        </div>
+      </div>
+      <div id="err-nuevo-art" class="text-xs t-err hidden"></div>
+      <div class="flex" style="gap:8px">
+        <button type="button" class="btn btn-ghost flex-1" onclick="document.getElementById('modal-nuevo-art').classList.add('hidden')">Cancelar</button>
+        <button type="submit" class="btn btn-solid flex-1">Crear artículo</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/shared.js"></script>
+<script>
+const user = requireRole('voluntario');
+document.getElementById('sb-name').textContent = user.nombre;
+document.getElementById('sb-role').textContent = 'Voluntario';
+syncThemeIcons();
+
+let articulosMap={}, campanaActiva=null, centroActual=null, inventario=[], movsCentro=[];
+let acArticulo = null;
+
+const SECS=['inventario','historial','registrar'];
+function showSec(s,el){
+  SECS.forEach(x=>document.getElementById('sec-'+x).classList.toggle('hidden',x!==s));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el)el.classList.add('active');
+}
+function setTipo(t){document.getElementById('sel-tipo').value=t; onTipoChange();}
+function onTipoChange(){
+  const t=document.getElementById('sel-tipo').value;
+  document.getElementById('campo-inst').classList.toggle('hidden', t!=='entrega');
+  document.getElementById('campo-donante').classList.toggle('hidden', t!=='recepcion');
+  if(t!=='recepcion') document.getElementById('chk-anonimo').checked=true;
+  if(t==='recepcion') toggleAnonimo();
+}
+function toggleAnonimo(){
+  const anonimo=document.getElementById('chk-anonimo').checked;
+  document.getElementById('donante-fields').classList.toggle('hidden',anonimo);
+}
+
+async function load(){
+  const [arts,camps,cens,insts]=await Promise.all([
+    fetch(`${API}/articulos`).then(r=>r.json()),
+    fetch(`${API}/campanas`).then(r=>r.json()),
+    fetch(`${API}/centros`).then(r=>r.json()),
+    fetch(`${API}/instituciones`).then(r=>r.json()),
+  ]);
+  articulosMap=Object.fromEntries(arts.map(a=>[a.id,a]));
+  campanaActiva=camps.find(c=>c.activa)||camps[0];
+  centroActual=cens.find(c=>c.id===user.centro_id);
+
+  document.getElementById('sb-centro').textContent=centroActual?.nombre||'Sin centro asignado';
+  document.getElementById('campana-badge').textContent=campanaActiva?`Campaña: ${campanaActiva.nombre}`:'Sin campaña activa';
+
+  acArticulo = mountArticuloSearch('ac-articulo-vol', null);
+
+  const selI=document.getElementById('sel-inst');
+  selI.innerHTML=`<option value="">— selecciona —</option>`+insts.filter(i=>i.activa!==false).map(i=>`<option value="${i.id}">${i.nombre}</option>`).join('');
+
+  if(centroActual&&campanaActiva){
+    [inventario,movsCentro]=await Promise.all([
+      fetch(`${API}/inventario/${centroActual.id}/${campanaActiva.id}`).then(r=>r.json()),
+      fetch(`${API}/movimientos?centro_id=${centroActual.id}`).then(r=>r.json()),
+    ]);
+    renderAll();
+  }
+}
+
+function renderAll(){
+  document.getElementById('kpi-stock').textContent=fmtNum(inventario.reduce((s,i)=>s+i.stock,0));
+  document.getElementById('kpi-tipos').textContent=inventario.filter(i=>i.stock>0).length;
+  const hoy=new Date().toDateString();
+  document.getElementById('kpi-hoy').textContent=movsCentro.filter(m=>m.actor_id===user.id&&new Date(m.fecha).toDateString()===hoy).length;
+
+  document.getElementById('inv-tbody').innerHTML=inventario.map(i=>`
+    <tr><td><span class="fw-600">${i.nombre}</span></td><td class="t2 text-xs">${i.categoria}</td>
+    <td class="t2">${i.unidad}</td>
+    <td class="${i.stock<=0?'t-err':'t-ok'} fw-600">${fmtNum(i.stock)}</td></tr>`)
+    .join('')||'<tr><td colspan="4" class="t2" style="text-align:center;padding:20px">Sin stock</td></tr>';
+
+  const misMov=[...movsCentro].filter(m=>m.actor_id===user.id).reverse().slice(0,30);
+  document.getElementById('hist-tbody').innerHTML=misMov.map(m=>{
+    const art=articulosMap[m.articulo_id]||{nombre:m.articulo_id,unidad:''};
+    const signo=tipoSigno(m.tipo); const col=tipoColor(m.tipo);
+    return `<tr>
+      <td class="text-xs t2">${fmt(m.fecha)}</td>
+      <td>${tipoBadge(m.tipo)}</td>
+      <td>${art.nombre}</td>
+      <td class="${col} fw-600">${signo}${fmtNum(m.cantidad)} ${art.unidad}</td>
+      <td class="text-xs t2">${m.observaciones||'—'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="5" class="t2" style="text-align:center;padding:20px">Sin registros tuyos aún</td></tr>';
+}
+
+async function submitMov(e){
+  e.preventDefault();
+  const tipo=document.getElementById('sel-tipo').value;
+  const errEl=document.getElementById('err-mov');
+  errEl.classList.add('hidden');
+  if(!centroActual||!campanaActiva){errEl.textContent='Sin centro o campaña activa.';errEl.classList.remove('hidden');return;}
+
+  const art = acArticulo?.getValue();
+  if (!art) { errEl.textContent='Selecciona un artículo del catálogo.'; errEl.classList.remove('hidden'); return; }
+
+  const cantidad = parseFloat(document.getElementById('inp-cantidad').value);
+  if (!cantidad || cantidad <= 0) { errEl.textContent='La cantidad debe ser mayor a cero.'; errEl.classList.remove('hidden'); return; }
+
+  const obs=document.getElementById('inp-obs').value||'';
+  const base={centro_id:centroActual.id,campana_id:campanaActiva.id,articulo_id:art.id,
+    cantidad,actor_id:user.id,observaciones:obs};
+
+  let donante=null;
+  if(tipo==='recepcion'){
+    const anonimo=document.getElementById('chk-anonimo').checked;
+    if(!anonimo){
+      const nombre=document.getElementById('inp-donante-nombre').value.trim();
+      if(!nombre){errEl.textContent='Ingresa el nombre del donante o marca como anónimo.';errEl.classList.remove('hidden');return;}
+      donante={nombre,tipo:document.getElementById('sel-donante-tipo').value,contacto:document.getElementById('inp-donante-contacto').value.trim()||null};
+    }
+  }
+
+  let body=tipo==='recepcion'?{...base,donante}:base;
+  if(tipo==='entrega'){
+    const instId=document.getElementById('sel-inst').value;
+    if(!instId){errEl.textContent='Selecciona la institución receptora.';errEl.classList.remove('hidden');return;}
+    body={...base,institucion_receptora_id:instId};
+  }
+
+  const res=await fetch(`${API}/movimientos/${tipo}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const data=await res.json();
+  if(res.ok){
+    toast('Movimiento registrado');
+    document.getElementById('form-mov').reset();
+    acArticulo.reset();
+    onTipoChange();
+    [inventario,movsCentro]=await Promise.all([
+      fetch(`${API}/inventario/${centroActual.id}/${campanaActiva.id}`).then(r=>r.json()),
+      fetch(`${API}/movimientos?centro_id=${centroActual.id}`).then(r=>r.json()),
+    ]);
+    renderAll();
+  } else {errEl.textContent=data.error||'Error.';errEl.classList.remove('hidden');}
+}
+
+function openModalNuevoArt() {
+  document.getElementById('na-nombre').value = '';
+  document.getElementById('err-nuevo-art').classList.add('hidden');
+  document.getElementById('modal-nuevo-art').classList.remove('hidden');
+}
+
+async function submitNuevoArt(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('err-nuevo-art');
+  errEl.classList.add('hidden');
+  const body = {
+    nombre:    document.getElementById('na-nombre').value.trim(),
+    categoria: document.getElementById('na-categoria').value,
+    unidad:    document.getElementById('na-unidad').value,
+  };
+  const res = await fetch(`${API}/articulos`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  const data = await res.json();
+  if (res.ok) {
+    articulosMap[data.id] = data;
+    document.getElementById('modal-nuevo-art').classList.add('hidden');
+    e.target.reset();
+    toast('Artículo creado. Búscalo en el campo de arriba.');
+  } else { errEl.textContent = data.error || 'Error al crear.'; errEl.classList.remove('hidden'); }
+}
+
+document.getElementById('modal-nuevo-art').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-nuevo-art')) document.getElementById('modal-nuevo-art').classList.add('hidden');
+});
+
+load();
+</script>
+</body>
+</html>

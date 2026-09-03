@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es" id="root">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Líder de Campaña — Acopio</title>
+<link rel="stylesheet" href="/shared.css">
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar" id="sidebar">
+  <div class="flex items-center" style="gap:10px;margin-bottom:14px">
+    <div class="app-mark">A</div>
+    <div>
+      <div style="font-size:15px;font-weight:700">Acopio</div>
+      <div class="user-role" id="sb-role">—</div>
+    </div>
+  </div>
+
+  <div style="padding:10px 12px;border-radius:10px;background:var(--s1);border:1px solid var(--b);margin-bottom:8px">
+    <div style="font-size:13px;font-weight:600" id="sb-name">—</div>
+    <div class="text-xs t2 mt-1" id="sb-camp">—</div>
+  </div>
+
+  <div class="nav-section">Campaña</div>
+  <button class="nav-item active" onclick="showSec('overview',this)">Dashboard campaña</button>
+  <button class="nav-item" onclick="showSec('centros',this)">Centros participantes</button>
+  <button class="nav-item" onclick="showSec('movimientos',this)">Movimientos</button>
+  <button class="nav-item" onclick="showSec('editar',this)">Editar campaña</button>
+
+  <div style="flex:1"></div>
+  <div style="border-top:1px solid var(--b);padding-top:12px;display:flex;gap:8px;align-items:center">
+    <button class="theme-btn" onclick="toggleTheme()"><span class="theme-icon"></span></button>
+    <button class="btn btn-ghost flex-1" onclick="logout()">Salir</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="flex items-center justify-between" style="margin-bottom:24px">
+    <div>
+      <div class="page-title" id="page-title">Dashboard de campaña</div>
+      <div class="page-sub" id="campana-info">Cargando…</div>
+    </div>
+    <div id="estado-badge" style="padding:6px 14px;border-radius:8px;font-size:12px" class="g t2">—</div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="sec-overview">
+    <div class="grid4" style="margin-bottom:20px">
+      <div class="card g"><div class="kpi-label">Centros en campaña</div><div class="kpi-num" id="kpi-centros">—</div></div>
+      <div class="card g"><div class="kpi-label">Recepciones</div><div class="kpi-num t-ok" id="kpi-recs">—</div></div>
+      <div class="card g"><div class="kpi-label">Entregas</div><div class="kpi-num t-info" id="kpi-ents">—</div></div>
+      <div class="card g"><div class="kpi-label">Mermas</div><div class="kpi-num t-err" id="kpi-mermas">—</div></div>
+    </div>
+
+    <div class="grid2" style="gap:16px">
+      <div>
+        <div class="section-title">Inventario agregado de la campaña</div>
+        <div class="tbl-wrap g">
+          <table class="tbl">
+            <thead><tr><th>Artículo</th><th>Unidad</th><th>Stock total</th></tr></thead>
+            <tbody id="inv-agg-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">Actividad por centro</div>
+        <div class="tbl-wrap g">
+          <table class="tbl">
+            <thead><tr><th>Centro</th><th>Movimientos</th><th>Estado</th></tr></thead>
+            <tbody id="centros-act-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTROS PARTICIPANTES -->
+  <div id="sec-centros" class="hidden">
+    <div class="flex" style="gap:8px;margin-bottom:16px">
+      <select id="sel-agregar" style="max-width:220px">
+        <option value="">— selecciona centro —</option>
+      </select>
+      <button class="btn btn-solid" onclick="agregarCentro()">Agregar a campaña</button>
+    </div>
+    <div class="tbl-wrap g">
+      <table class="tbl">
+        <thead><tr><th>ID</th><th>Centro</th><th>Institución</th><th>Estado</th><th>Acción</th></tr></thead>
+        <tbody id="centros-part-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MOVIMIENTOS -->
+  <div id="sec-movimientos" class="hidden">
+    <div class="flex" style="gap:8px;margin-bottom:16px;align-items:center">
+      <select id="filtro-tipo" style="max-width:180px" onchange="renderMovimientos()">
+        <option value="">Todos los tipos</option>
+        <option value="recepcion">Recepción</option>
+        <option value="entrega">Entrega</option>
+        <option value="merma">Merma</option>
+        <option value="transferencia_salida">Transferencia</option>
+      </select>
+      <select id="filtro-centro" style="max-width:180px" onchange="renderMovimientos()">
+        <option value="">Todos los centros</option>
+      </select>
+    </div>
+    <div class="tbl-wrap g">
+      <table class="tbl">
+        <thead><tr><th>Fecha</th><th>Tipo</th><th>Artículo</th><th>Cantidad</th><th>Centro</th><th>Detalle</th></tr></thead>
+        <tbody id="movimientos-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- EDITAR -->
+  <div id="sec-editar" class="hidden">
+    <div class="card g" style="max-width:480px">
+      <div class="section-title">Editar información de la campaña</div>
+      <form id="form-editar" onsubmit="guardarCampana(event)" style="display:grid;gap:14px">
+        <div>
+          <label class="lbl">Nombre</label>
+          <input id="edit-nombre" name="nombre" required>
+        </div>
+        <div class="grid2">
+          <div><label class="lbl">Fecha inicio</label><input id="edit-inicio" name="fecha_inicio" type="date" required></div>
+          <div><label class="lbl">Fecha fin</label><input id="edit-fin" name="fecha_fin" type="date" required></div>
+        </div>
+        <div>
+          <label class="lbl">Descripción</label>
+          <input id="edit-desc" name="descripcion" placeholder="Opcional">
+        </div>
+        <div id="err-editar" class="text-xs t-err hidden"></div>
+        <div class="flex items-center" style="gap:12px">
+          <div class="flex items-center" style="gap:8px">
+            <label class="toggle" id="toggle-camp-wrap" title="Activar / desactivar campaña">
+              <input type="checkbox" id="chk-camp-activa" onchange="toggleCampana(this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="text-xs t2" id="lbl-camp-estado">—</span>
+          </div>
+          <button type="submit" class="btn btn-solid flex-1">Guardar cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="/shared.js"></script>
+<script>
+const user = requireRole('lider_campana');
+document.getElementById('sb-name').textContent = user.nombre;
+document.getElementById('sb-role').textContent  = 'Líder de Campaña';
+syncThemeIcons();
+
+let campana=null, centrosCampana=[], todosCentros=[], articulosMap={}, movsCampana=[], centrosMap={};
+
+const SECS=['overview','centros','movimientos','editar'];
+function showSec(s,el){
+  SECS.forEach(x=>document.getElementById('sec-'+x).classList.toggle('hidden',x!==s));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el)el.classList.add('active');
+}
+
+async function load(){
+  const [camps,cens,arts,movs]=await Promise.all([
+    fetch(`${API}/campanas`).then(r=>r.json()),
+    fetch(`${API}/centros`).then(r=>r.json()),
+    fetch(`${API}/articulos`).then(r=>r.json()),
+    fetch(`${API}/movimientos`).then(r=>r.json()),
+  ]);
+
+  campana=camps.find(c=>c.id===user.campana_id)||camps.find(c=>c.activa)||camps[0];
+  articulosMap=Object.fromEntries(arts.map(a=>[a.id,a]));
+  todosCentros=cens;
+  centrosMap=Object.fromEntries(cens.map(c=>[c.id,c]));
+
+  if(!campana){document.getElementById('campana-info').textContent='Sin campaña asignada'; return;}
+
+  centrosCampana=cens.filter(c=>(c.campanas||[]).includes(campana.id));
+  movsCampana=movs.filter(m=>m.campana_id===campana.id);
+
+  document.getElementById('sb-camp').textContent=campana.nombre;
+  document.getElementById('campana-info').textContent=`${campana.fecha_inicio} → ${campana.fecha_fin}`;
+  document.getElementById('estado-badge').textContent=campana.activa?'Activa':'Inactiva';
+  document.getElementById('estado-badge').style.color=campana.activa?'var(--ok)':'var(--t2)';
+
+  const selA=document.getElementById('sel-agregar');
+  todosCentros.filter(c=>!(c.campanas||[]).includes(campana.id)&&c.activo).forEach(c=>{
+    selA.innerHTML+=`<option value="${c.id}">${c.nombre}</option>`;
+  });
+
+  const selFC=document.getElementById('filtro-centro');
+  centrosCampana.forEach(c=>selFC.innerHTML+=`<option value="${c.id}">${c.nombre}</option>`);
+
+  document.getElementById('edit-nombre').value=campana.nombre;
+  document.getElementById('edit-inicio').value=campana.fecha_inicio;
+  document.getElementById('edit-fin').value=campana.fecha_fin;
+  document.getElementById('edit-desc').value=campana.descripcion||'';
+  const chk = document.getElementById('chk-camp-activa');
+  chk.checked = !!campana.activa;
+  document.getElementById('lbl-camp-estado').textContent = campana.activa ? 'Campaña activa' : 'Campaña inactiva';
+
+  renderOverview();
+  renderCentrosParticipantes();
+  renderMovimientos();
+}
+
+function renderOverview(){
+  document.getElementById('kpi-centros').textContent=centrosCampana.length;
+  document.getElementById('kpi-recs').textContent=fmtNum(movsCampana.filter(m=>m.tipo==='recepcion').length);
+  document.getElementById('kpi-ents').textContent=fmtNum(movsCampana.filter(m=>m.tipo==='entrega').length);
+  document.getElementById('kpi-mermas').textContent=fmtNum(movsCampana.filter(m=>m.tipo==='merma').length);
+
+  const agg={};
+  movsCampana.forEach(m=>{
+    const art=articulosMap[m.articulo_id];
+    if(!art)return;
+    if(!agg[m.articulo_id])agg[m.articulo_id]={nombre:art.nombre,unidad:art.unidad,stock:0};
+    const signo=['recepcion','transferencia_entrada','ajuste'].includes(m.tipo)?1:-1;
+    agg[m.articulo_id].stock+=signo*m.cantidad;
+  });
+  document.getElementById('inv-agg-tbody').innerHTML=Object.values(agg).map(i=>`
+    <tr><td><span class="fw-600">${i.nombre}</span></td>
+    <td class="t2">${i.unidad}</td>
+    <td class="${i.stock<=0?'t-err':'t-ok'} fw-600">${fmtNum(i.stock)}</td></tr>`)
+    .join('')||'<tr><td colspan="3" class="t2" style="text-align:center;padding:20px">Sin movimientos</td></tr>';
+
+  document.getElementById('centros-act-tbody').innerHTML=centrosCampana.map(c=>{
+    const n=movsCampana.filter(m=>m.centro_id===c.id).length;
+    return `<tr>
+      <td><span class="fw-600">${c.nombre}</span></td>
+      <td>${fmtNum(n)} movimientos</td>
+      <td>${c.activo?'<span class="badge badge-ok">Activo</span>':'<span class="badge badge-neu">Inactivo</span>'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="3" class="t2" style="text-align:center;padding:20px">Sin centros</td></tr>';
+}
+
+function renderCentrosParticipantes(){
+  document.getElementById('centros-part-tbody').innerHTML=centrosCampana.map(c=>`
+    <tr>
+      <td class="t2 text-xs">${c.id}</td>
+      <td><span class="fw-600">${c.nombre}</span></td>
+      <td class="t2">${c.institucion}</td>
+      <td>${c.activo?'<span class="badge badge-ok">Activo</span>':'<span class="badge badge-neu">Inactivo</span>'}</td>
+      <td><button class="btn btn-err" style="padding:4px 10px;font-size:12px" onclick="quitarCentro('${c.id}')">Quitar</button></td>
+    </tr>`).join('')||'<tr><td colspan="5" class="t2" style="text-align:center;padding:20px">Sin centros participantes</td></tr>';
+}
+
+function renderMovimientos(){
+  const tipoF=document.getElementById('filtro-tipo').value;
+  const centroF=document.getElementById('filtro-centro').value;
+  let lista=[...movsCampana].reverse();
+  if(tipoF)lista=lista.filter(m=>m.tipo===tipoF);
+  if(centroF)lista=lista.filter(m=>m.centro_id===centroF);
+  document.getElementById('movimientos-tbody').innerHTML=lista.slice(0,60).map(m=>{
+    const art=articulosMap[m.articulo_id]||{nombre:m.articulo_id,unidad:''};
+    const centro=centrosMap[m.centro_id]||{nombre:m.centro_id};
+    const signo=tipoSigno(m.tipo); const col=tipoColor(m.tipo);
+    return `<tr>
+      <td class="text-xs t2">${fmt(m.fecha)}</td>
+      <td>${tipoBadge(m.tipo)}</td>
+      <td>${art.nombre}</td>
+      <td class="${col} fw-600">${signo}${fmtNum(m.cantidad)} ${art.unidad}</td>
+      <td class="t2">${centro.nombre}</td>
+      <td class="text-xs t2">${m.motivo||m.observaciones||'—'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="6" class="t2" style="text-align:center;padding:20px">Sin movimientos</td></tr>';
+}
+
+async function agregarCentro(){
+  const centroId=document.getElementById('sel-agregar').value;
+  if(!centroId||!campana)return;
+  const res=await fetch(`${API}/campanas/${campana.id}/centros`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({centro_id:centroId})});
+  if(res.ok){toast('Centro agregado a la campaña'); location.reload();}
+  else{const d=await res.json(); toast(d.error||'Error','err');}
+}
+
+async function quitarCentro(centroId){
+  if(!confirm('¿Quitar este centro de la campaña?'))return;
+  const res=await fetch(`${API}/campanas/${campana.id}/centros/${centroId}`,{method:'DELETE'});
+  if(res.ok){toast('Centro removido'); location.reload();}
+  else toast('Error al remover','err');
+}
+
+async function toggleCampana(nuevoEstado){
+  if(!campana)return;
+  const ep = nuevoEstado ? 'activar' : 'desactivar';
+  const res=await fetch(`${API}/campanas/${campana.id}/${ep}`,{method:'PATCH'});
+  if(res.ok){
+    campana = await res.json();
+    document.getElementById('lbl-camp-estado').textContent = campana.activa ? 'Campaña activa' : 'Campaña inactiva';
+    document.getElementById('estado-badge').textContent = campana.activa ? 'Activa' : 'Inactiva';
+    document.getElementById('estado-badge').style.color = campana.activa ? 'var(--ok)' : 'var(--t2)';
+    toast(campana.activa ? 'Campaña activada' : 'Campaña desactivada');
+  } else {
+    // revertir
+    document.getElementById('chk-camp-activa').checked = !!campana.activa;
+    toast('Error al actualizar','err');
+  }
+}
+
+async function guardarCampana(e){
+  e.preventDefault();
+  const fd=new FormData(e.target);
+  const errEl=document.getElementById('err-editar');
+  const res=await fetch(`${API}/campanas/${campana.id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({nombre:fd.get('nombre'),fecha_inicio:fd.get('fecha_inicio'),fecha_fin:fd.get('fecha_fin'),descripcion:fd.get('descripcion')})});
+  const data=await res.json();
+  if(res.ok){toast('Campaña actualizada'); campana=data; document.getElementById('campana-info').textContent=`${data.fecha_inicio} → ${data.fecha_fin}`;}
+  else{errEl.textContent=data.error; errEl.classList.remove('hidden');}
+}
+
+load();
+</script>
+</body>
+</html>

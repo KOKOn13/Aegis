@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es" id="root">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Institución — Acopio</title>
+<link rel="stylesheet" href="/shared.css">
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar" id="sidebar">
+  <div class="flex items-center" style="gap:10px;margin-bottom:14px">
+    <div class="app-mark">A</div>
+    <div>
+      <div style="font-size:15px;font-weight:700">Acopio</div>
+      <div class="user-role" id="sb-role">—</div>
+    </div>
+  </div>
+
+  <div style="padding:10px 12px;border-radius:10px;background:var(--s1);border:1px solid var(--b);margin-bottom:8px">
+    <div style="font-size:13px;font-weight:600" id="sb-name">—</div>
+    <div class="text-xs t2 mt-1" id="sb-inst">Institución receptora</div>
+  </div>
+
+  <div class="nav-section">Entregas</div>
+  <button class="nav-item active" onclick="showSec('pendientes',this)">Por confirmar</button>
+  <button class="nav-item" onclick="showSec('confirmadas',this)">Confirmadas</button>
+  <button class="nav-item" onclick="showSec('todas',this)">Todo el historial</button>
+
+  <div style="flex:1"></div>
+  <div style="border-top:1px solid var(--b);padding-top:12px;display:flex;gap:8px">
+    <button class="theme-btn" onclick="toggleTheme()"><span class="theme-icon"></span></button>
+    <button class="btn btn-ghost flex-1" onclick="logout()">Salir</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="flex items-center justify-between" style="margin-bottom:24px">
+    <div>
+      <div class="page-title" id="page-title">Entregas por confirmar</div>
+      <div class="page-sub" id="page-sub">Artículos canalizados hacia tu institución</div>
+    </div>
+  </div>
+
+  <div class="grid3" style="margin-bottom:24px">
+    <div class="card g"><div class="kpi-label">Entregas recibidas</div><div class="kpi-num" id="kpi-total">—</div></div>
+    <div class="card g"><div class="kpi-label">Por confirmar</div><div class="kpi-num t-warn" id="kpi-pendientes">—</div></div>
+    <div class="card g"><div class="kpi-label">Confirmadas</div><div class="kpi-num t-ok" id="kpi-confirmadas">—</div></div>
+  </div>
+
+  <!-- POR CONFIRMAR -->
+  <div id="sec-pendientes">
+    <div class="tbl-wrap g">
+      <table class="tbl">
+        <thead><tr><th>Fecha</th><th>Artículo</th><th>Cantidad</th><th>Centro de origen</th><th>Observaciones</th><th>Acción</th></tr></thead>
+        <tbody id="tbody-pendientes"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CONFIRMADAS -->
+  <div id="sec-confirmadas" class="hidden">
+    <div class="tbl-wrap g">
+      <table class="tbl">
+        <thead><tr><th>Fecha</th><th>Artículo</th><th>Cantidad</th><th>Centro de origen</th><th>Observaciones</th></tr></thead>
+        <tbody id="tbody-confirmadas"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TODAS -->
+  <div id="sec-todas" class="hidden">
+    <div class="tbl-wrap g">
+      <table class="tbl">
+        <thead><tr><th>Fecha</th><th>Artículo</th><th>Cantidad</th><th>Centro</th><th>Estado</th><th>Acción</th></tr></thead>
+        <tbody id="tbody-todas"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="/shared.js"></script>
+<script>
+const user = requireRole('institucion_receptora');
+document.getElementById('sb-name').textContent = user.nombre;
+document.getElementById('sb-role').textContent = 'Institución Receptora';
+syncThemeIcons();
+
+let articulosMap={}, centrosMap={}, entregas=[];
+
+const SECS=['pendientes','confirmadas','todas'];
+function showSec(s,el){
+  SECS.forEach(x=>document.getElementById('sec-'+x).classList.toggle('hidden',x!==s));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const titles={pendientes:'Entregas por confirmar',confirmadas:'Entregas confirmadas',todas:'Historial completo'};
+  const subs={pendientes:'Confirma la recepción de artículos canalizados',confirmadas:'Entregas ya verificadas',todas:'Todas las entregas registradas para tu institución'};
+  document.getElementById('page-title').textContent=titles[s];
+  document.getElementById('page-sub').textContent=subs[s];
+  if(el)el.classList.add('active');
+}
+
+async function load(){
+  const [arts,cens,movs]=await Promise.all([
+    fetch(`${API}/articulos`).then(r=>r.json()),
+    fetch(`${API}/centros`).then(r=>r.json()),
+    fetch(`${API}/movimientos`).then(r=>r.json()),
+  ]);
+  articulosMap=Object.fromEntries(arts.map(a=>[a.id,a]));
+  centrosMap=Object.fromEntries(cens.map(c=>[c.id,c]));
+
+  const instId = user.institucion_id || null;
+  entregas = movs.filter(m=>m.tipo==='entrega' && (
+    m.institucion_receptora_id===instId || (instId===null)
+  )).reverse();
+
+  renderAll();
+}
+
+function renderAll(){
+  const pendientes=entregas.filter(m=>!m.confirmado);
+  const confirmadas=entregas.filter(m=>m.confirmado);
+
+  document.getElementById('kpi-total').textContent=fmtNum(entregas.length);
+  document.getElementById('kpi-pendientes').textContent=fmtNum(pendientes.length);
+  document.getElementById('kpi-confirmadas').textContent=fmtNum(confirmadas.length);
+
+  document.getElementById('tbody-pendientes').innerHTML=rowsConAccion(pendientes,true);
+  document.getElementById('tbody-confirmadas').innerHTML=rowsSinAccion(confirmadas);
+  document.getElementById('tbody-todas').innerHTML=rowsTodas(entregas);
+}
+
+function rowsConAccion(lista, mostrarBtn){
+  return lista.map(m=>{
+    const art=articulosMap[m.articulo_id]||{nombre:m.articulo_id,unidad:''};
+    const centro=centrosMap[m.centro_id]||{nombre:m.centro_id};
+    return `<tr>
+      <td class="text-xs t2">${fmt(m.fecha)}</td>
+      <td><span class="fw-600">${art.nombre}</span></td>
+      <td class="t-info fw-600">${fmtNum(m.cantidad)} ${art.unidad}</td>
+      <td class="t2">${centro.nombre}</td>
+      <td class="text-xs t2">${m.observaciones||'—'}</td>
+      <td>${mostrarBtn?`<button class="btn btn-ok" style="padding:4px 12px;font-size:12px" onclick="confirmar('${m.id}')">Confirmar recibo</button>`:'—'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="6" class="t2" style="text-align:center;padding:20px">Sin entregas pendientes</td></tr>';
+}
+
+function rowsSinAccion(lista){
+  return lista.map(m=>{
+    const art=articulosMap[m.articulo_id]||{nombre:m.articulo_id,unidad:''};
+    const centro=centrosMap[m.centro_id]||{nombre:m.centro_id};
+    return `<tr>
+      <td class="text-xs t2">${fmt(m.fecha)}</td>
+      <td><span class="fw-600">${art.nombre}</span></td>
+      <td class="t-ok fw-600">${fmtNum(m.cantidad)} ${art.unidad}</td>
+      <td class="t2">${centro.nombre}</td>
+      <td class="text-xs t2">${m.observaciones||'—'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="5" class="t2" style="text-align:center;padding:20px">Sin entregas confirmadas</td></tr>';
+}
+
+function rowsTodas(lista){
+  return lista.map(m=>{
+    const art=articulosMap[m.articulo_id]||{nombre:m.articulo_id,unidad:''};
+    const centro=centrosMap[m.centro_id]||{nombre:m.centro_id};
+    const ok=m.confirmado;
+    return `<tr>
+      <td class="text-xs t2">${fmt(m.fecha)}</td>
+      <td><span class="fw-600">${art.nombre}</span></td>
+      <td class="fw-600">${fmtNum(m.cantidad)} ${art.unidad}</td>
+      <td class="t2">${centro.nombre}</td>
+      <td>${ok?'<span class="badge badge-ok">Confirmada</span>':'<span class="badge badge-warn">Pendiente</span>'}</td>
+      <td>${!ok?`<button class="btn btn-ok" style="padding:4px 12px;font-size:12px" onclick="confirmar('${m.id}')">Confirmar</button>`:'—'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="6" class="t2" style="text-align:center;padding:20px">Sin historial</td></tr>';
+}
+
+async function confirmar(movId){
+  const res=await fetch(`${API}/movimientos/${movId}/confirmar`,{method:'PATCH'});
+  if(res.ok){
+    const updated=await res.json();
+    entregas=entregas.map(m=>m.id===movId?updated:m);
+    renderAll();
+    toast('Entrega confirmada como recibida');
+  } else toast('Error al confirmar','err');
+}
+
+load();
+</script>
+</body>
+</html>

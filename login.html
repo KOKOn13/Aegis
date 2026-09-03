@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es" id="root">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acopio — Acceso</title>
+<style>
+:root {
+  --bg:#050505; --s2:rgba(255,255,255,.055); --s3:rgba(255,255,255,.09);
+  --b:rgba(255,255,255,.08); --b2:rgba(255,255,255,.16);
+  --t1:#f0f0f0; --t2:#888; --t3:#333;
+  --btn:#f0f0f0; --btn-t:#050505;
+  --err:rgba(252,165,165,.9);
+}
+[data-theme=light]{
+  --bg:#efefef; --s2:rgba(255,255,255,.68); --s3:rgba(255,255,255,.92);
+  --b:rgba(0,0,0,.08); --b2:rgba(0,0,0,.16);
+  --t1:#0a0a0a; --t2:#666; --t3:#ccc;
+  --btn:#0a0a0a; --btn-t:#fff;
+  --err:rgba(185,28,28,.9);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  background:var(--bg); color:var(--t1);
+  display:flex; align-items:center; justify-content:center;
+  min-height:100vh; transition:background .25s,color .25s;
+  position:relative; overflow:hidden;
+}
+body::before{
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background-image:radial-gradient(circle,var(--b) 1px,transparent 1px);
+  background-size:32px 32px;
+}
+body::after{
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(ellipse 60% 50% at 50% 50%,
+    rgba(255,255,255,.04) 0%,transparent 70%);
+}
+[data-theme=light] body::after{
+  background:radial-gradient(ellipse 60% 50% at 50% 50%,
+    rgba(255,255,255,.6) 0%,transparent 70%);
+}
+.card{
+  position:relative; z-index:1;
+  width:100%; max-width:380px;
+  background:var(--s2);
+  backdrop-filter:blur(28px) saturate(160%);
+  -webkit-backdrop-filter:blur(28px) saturate(160%);
+  border:1px solid var(--b);
+  border-radius:16px;
+  padding:36px 32px;
+  box-shadow:0 32px 80px rgba(0,0,0,.35);
+}
+[data-theme=light] .card{box-shadow:0 16px 48px rgba(0,0,0,.12);}
+.logo{display:flex; align-items:center; gap:12px; margin-bottom:28px;}
+.logo-mark{
+  width:38px; height:38px; border-radius:9px;
+  background:var(--t1); display:flex; align-items:center; justify-content:center;
+  color:var(--bg); font-size:18px; font-weight:700; flex-shrink:0;
+}
+.logo-text{font-size:22px; font-weight:700; letter-spacing:-.02em;}
+.logo-sub{font-size:12px; color:var(--t2); margin-top:1px;}
+.field{margin-bottom:14px;}
+.lbl{display:block; font-size:11px; color:var(--t2); margin-bottom:6px; letter-spacing:.03em;}
+input{
+  background:var(--s2); border:1px solid var(--b);
+  color:var(--t1); border-radius:9px; padding:10px 14px;
+  font-size:14px; outline:none; width:100%;
+  transition:border-color .2s,background .25s; font-family:inherit;
+}
+input:focus{border-color:var(--b2); background:var(--s3);}
+input::placeholder{color:var(--t3);}
+.btn-login{
+  width:100%; padding:11px; background:var(--btn); color:var(--btn-t);
+  border:none; border-radius:9px; font-size:14px; font-weight:600;
+  cursor:pointer; margin-top:6px; transition:opacity .15s;
+  font-family:inherit; letter-spacing:.01em;
+}
+.btn-login:hover{opacity:.88;}
+.error-msg{font-size:12px; color:var(--err); text-align:center; margin-top:10px; min-height:18px;}
+.divider{
+  display:flex; align-items:center; gap:12px;
+  margin:22px 0 18px; color:var(--t2); font-size:11px;
+}
+.divider::before,.divider::after{content:''; flex:1; height:1px; background:var(--b);}
+.roles-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+.role-chip{
+  padding:9px 10px; border-radius:9px;
+  border:1px solid var(--b); background:var(--s2);
+  cursor:pointer; transition:background .15s,border-color .15s;
+}
+.role-chip:hover{background:var(--s3); border-color:var(--b2);}
+.role-chip .r-mark{
+  width:24px; height:24px; border-radius:5px;
+  background:var(--t1); color:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:700; margin-bottom:5px;
+}
+.role-chip .r-name{font-size:11px; font-weight:600; color:var(--t1);}
+.role-chip .r-desc{font-size:10px; color:var(--t2); margin-top:1px; line-height:1.3;}
+.theme-btn{
+  position:fixed; top:20px; right:20px; z-index:10;
+  width:38px; height:38px; border-radius:9px;
+  background:var(--s2); border:1px solid var(--b);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--t2);
+  transition:background .2s,color .2s;
+  backdrop-filter:blur(12px);
+}
+.theme-btn:hover{background:var(--s3); color:var(--t1);}
+.theme-icon{display:flex;align-items:center;}
+</style>
+</head>
+<body>
+<button class="theme-btn" onclick="toggleTheme()">
+  <span class="theme-icon">Claro</span>
+</button>
+
+<div class="card">
+  <div class="logo">
+    <div class="logo-mark">A</div>
+    <div>
+      <div class="logo-text">Acopio</div>
+      <div class="logo-sub">Sistema de gestión humanitaria</div>
+    </div>
+  </div>
+
+  <form id="form-login" onsubmit="doLogin(event)">
+    <div class="field">
+      <label class="lbl">Usuario</label>
+      <input id="inp-user" type="text" placeholder="nombre_usuario" autocomplete="username" required>
+    </div>
+    <div class="field">
+      <label class="lbl">Contraseña</label>
+      <input id="inp-pass" type="password" placeholder="••••••••" autocomplete="current-password" required>
+    </div>
+    <button class="btn-login" type="submit" id="btn-submit">Ingresar</button>
+    <div class="error-msg" id="error-msg"></div>
+  </form>
+
+  <div class="divider">accesos de ejemplo</div>
+
+  <div class="roles-grid">
+    <div class="role-chip" onclick="fillRole('ana_coord','coord2026')">
+      <div class="r-mark">CG</div>
+      <div class="r-name">Coordinador</div>
+      <div class="r-desc">Vista global, centros y campañas</div>
+    </div>
+    <div class="role-chip" onclick="fillRole('carlos_enc','norte2026')">
+      <div class="r-mark">EC</div>
+      <div class="r-name">Encargado</div>
+      <div class="r-desc">Gestión de su centro</div>
+    </div>
+    <div class="role-chip" onclick="fillRole('sofia_vol','vol2026')">
+      <div class="r-mark">VL</div>
+      <div class="r-name">Voluntario</div>
+      <div class="r-desc">Recepciones y entregas</div>
+    </div>
+    <div class="role-chip" onclick="fillRole('hospital_civil','hosp2026')">
+      <div class="r-mark">IR</div>
+      <div class="r-name">Institución</div>
+      <div class="r-desc">Confirma entregas recibidas</div>
+    </div>
+    <div class="role-chip" onclick="fillRole('marco_lider','camp2026')" style="grid-column:span 2">
+      <div class="r-mark">LC</div>
+      <div class="r-name">Líder de Campaña</div>
+      <div class="r-desc">Gestiona campaña, centros participantes y metas</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ROOT = document.documentElement;
+const stored = localStorage.getItem('acopio_theme');
+if (stored === 'light') ROOT.setAttribute('data-theme','light');
+
+const _SUN  = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>`;
+const _MOON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+
+function syncIcons() {
+  document.querySelectorAll('.theme-icon').forEach(el =>
+    el.innerHTML = ROOT.getAttribute('data-theme') === 'light' ? _MOON : _SUN);
+}
+function toggleTheme() {
+  const isLight = ROOT.getAttribute('data-theme') === 'light';
+  if (isLight) { ROOT.removeAttribute('data-theme'); localStorage.setItem('acopio_theme','dark'); }
+  else { ROOT.setAttribute('data-theme','light'); localStorage.setItem('acopio_theme','light'); }
+  syncIcons();
+}
+syncIcons();
+
+const ROUTES = {
+  coordinador_general: '/dashboard_coordinador.html',
+  encargado_centro: '/dashboard_encargado.html',
+  voluntario: '/dashboard_voluntario.html',
+  institucion_receptora: '/dashboard_institucion.html',
+  lider_campana: '/dashboard_lider.html',
+};
+
+const existing = localStorage.getItem('acopio_user');
+if (existing) {
+  try { const u = JSON.parse(existing); if (u && ROUTES[u.rol]) window.location.href = ROUTES[u.rol]; } catch {}
+}
+
+function fillRole(user, pass) {
+  document.getElementById('inp-user').value = user;
+  document.getElementById('inp-pass').value = pass;
+  document.getElementById('inp-pass').focus();
+}
+
+async function doLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-submit');
+  const errEl = document.getElementById('error-msg');
+  errEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Verificando…';
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        username: document.getElementById('inp-user').value.trim(),
+        password: document.getElementById('inp-pass').value,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) { errEl.textContent = data.error || 'Error al iniciar sesión.'; return; }
+    localStorage.setItem('acopio_user', JSON.stringify(data));
+    window.location.href = ROUTES[data.rol] || '/';
+  } catch {
+    errEl.textContent = 'No se pudo conectar al servidor.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Ingresar';
+  }
+}
+</script>
+</body>
+</html>

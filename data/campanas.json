@@ -1,0 +1,10 @@
+[
+  {
+    "id": "CAM001",
+    "nombre": "Campaña Principal",
+    "fecha_inicio": "2026-09-01",
+    "fecha_fin": "2026-12-31",
+    "descripcion": "",
+    "activa": true
+  }
+]

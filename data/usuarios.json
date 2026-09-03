@@ -1,0 +1,101 @@
+[
+  {
+    "id": "U001",
+    "nombre": "Ana Martínez",
+    "username": "ana_coord",
+    "password": "coord2026",
+    "rol": "coordinador_general",
+    "centro_id": null,
+    "campana_id": null,
+    "institucion_id": null,
+    "activo": true
+  },
+  {
+    "id": "U002",
+    "nombre": "Carlos Vega",
+    "username": "carlos_enc",
+    "password": "norte2026",
+    "rol": "encargado_centro",
+    "centro_id": "C001",
+    "campana_id": null,
+    "institucion_id": null,
+    "activo": true
+  },
+  {
+    "id": "U003",
+    "nombre": "Sofía Ramos",
+    "username": "sofia_vol",
+    "password": "vol2026",
+    "rol": "voluntario",
+    "centro_id": "C002",
+    "campana_id": null,
+    "institucion_id": null,
+    "activo": true
+  },
+  {
+    "id": "U004",
+    "nombre": "Hospital Civil",
+    "username": "hospital_civil",
+    "password": "hosp2026",
+    "rol": "institucion_receptora",
+    "centro_id": null,
+    "campana_id": null,
+    "institucion_id": "I001",
+    "activo": true
+  },
+  {
+    "id": "U005",
+    "nombre": "Marco López",
+    "username": "marco_lider",
+    "password": "camp2026",
+    "rol": "lider_campana",
+    "centro_id": null,
+    "campana_id": "CAM001",
+    "institucion_id": null,
+    "activo": true
+  },
+  {
+    "id": "U006",
+    "nombre": "Voluntario B",
+    "username": "voluntario_b",
+    "password": "1234",
+    "rol": "voluntario",
+    "centro_id": "C002",
+    "campana_id": null,
+    "institucion_id": null,
+    "activo": true
+  },
+  {
+    "id": "U007",
+    "nombre": "Auxiliar",
+    "username": "u999",
+    "password": "1234",
+    "rol": "voluntario",
+    "centro_id": null,
+    "campana_id": null,
+    "institucion_id": null,
+    "activo": true
+  },
+  {
+    "id": "U008",
+    "nombre": "Encargado C3",
+    "username": "u1x",
+    "password": "1234",
+    "rol": "encargado_centro",
+    "centro_id": "C003",
+    "campana_id": null,
+    "institucion_id": null,
+    "activo": true
+  },
+  {
+    "id": "U009",
+    "nombre": "Encargado C4",
+    "username": "u2x",
+    "password": "1234",
+    "rol": "encargado_centro",
+    "centro_id": "C004",
+    "campana_id": null,
+    "institucion_id": null,
+    "activo": true
+  }
+]

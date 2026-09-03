@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="es" id="root">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Encargado — Acopio</title>
+<link rel="stylesheet" href="/shared.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  .leaflet-tooltip.mapa-lbl {
+    background: var(--s3,#1e1e2e);
+    border: 1px solid var(--b,rgba(255,255,255,.12));
+    color: var(--t1,#fff);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  }
+  .leaflet-tooltip.mapa-lbl::before { display:none; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar" id="sidebar">
+  <div class="flex items-center" style="gap:10px;margin-bottom:14px">
+    <div class="app-mark">A</div>
+    <div>
+      <div style="font-size:15px;font-weight:700">Acopio</div>
+      <div class="user-role" id="sb-role">—</div>
+    </div>
+  </div>
+
+  <div style="padding:10px 12px;border-radius:10px;background:var(--s1);border:1px solid var(--b);margin-bottom:8px">
+    <div style="font-size:13px;font-weight:600" id="sb-name">—</div>
+    <div class="text-xs t2 mt-1" id="sb-centro">—</div>
+  </div>
+
+  <div class="nav-section">Mi centro</div>
+  <button class="nav-item active" onclick="showSec('dashboard',this)">Dashboard</button>
+  <button class="nav-item" onclick="showSec('inventario',this)">Inventario</button>
+  <button class="nav-item" onclick="showSec('historial',this)">Historial</button>
+
+  <div class="nav-section">Registrar</div>
+  <button class="nav-item" onclick="setTipo('recepcion');showSec('registrar',this)">Recepción</button>
+  <button class="nav-item" onclick="setTipo('entrega');showSec('registrar',this)">Entrega</button>
+  <button class="nav-item" onclick="setTipo('transferencia');showSec('registrar',this)">Transferencia</button>
+  <button class="nav-item" onclick="setTipo('merma');showSec('registrar',this)">Merma</button>
+  <button class="nav-item" onclick="setTipo('ajuste');showSec('registrar',this)">Ajuste</button>
+
+  <div style="flex:1"></div>
+  <div style="border-top:1px solid var(--b);padding-top:12px;display:flex;gap:8px">
+    <button class="theme-btn" onclick="toggleTheme()"><span class="theme-icon"></span></button>
+    <button class="btn btn-ghost flex-1" onclick="logout()">Salir</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="flex items-center justify-between" style="margin-bottom:24px">
+    <div>
+      <div class="page-title" id="page-title">Panel de control</div>
+      <div class="page-sub" id="page-sub">Inventario y movimientos de tu centro</div>
+    </div>
+    <div id="campana-badge" style="padding:6px 14px;border-radius:8px;font-size:12px" class="g t2">Cargando campaña…</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="sec-dashboard">
+
+    <!-- Info del centro -->
+    <div class="card g" style="margin-bottom:16px;padding:18px 22px">
+      <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--t2);margin-bottom:4px">Centro de acopio</div>
+          <div style="font-size:22px;font-weight:700;color:var(--t1)" id="dash-centro-nombre">—</div>
+          <div class="text-xs t2" style="margin-top:3px" id="dash-centro-info">—</div>
+        </div>
+        <div style="display:grid;gap:4px;text-align:right">
+          <div id="dash-campana-nombre" style="padding:5px 14px;border-radius:8px;font-size:12px;background:var(--s1);border:1px solid var(--b);color:var(--t2)">—</div>
+          <div class="text-xs t2" id="dash-campana-fechas">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPIs: stock + flujo -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px">
+      <div class="card g" style="padding:14px 16px">
+        <div class="kpi-label">Stock total</div>
+        <div class="kpi-num" id="kpi-stock">—</div>
+        <div class="text-xs t2">unidades/kg</div>
+      </div>
+      <div class="card g" style="padding:14px 16px">
+        <div class="kpi-label">Entradas</div>
+        <div class="kpi-num t-ok" id="kpi-entradas">—</div>
+        <div class="text-xs t2" id="kpi-entradas-cant">—</div>
+      </div>
+      <div class="card g" style="padding:14px 16px">
+        <div class="kpi-label">Salidas</div>
+        <div class="kpi-num t-info" id="kpi-salidas">—</div>
+        <div class="text-xs t2" id="kpi-salidas-cant">—</div>
+      </div>
+      <div class="card g" style="padding:14px 16px">
+        <div class="kpi-label">Mermas</div>
+        <div class="kpi-num t-err" id="kpi-mermas">—</div>
+        <div class="text-xs t2" id="kpi-mermas-cant">pendientes aprobación</div>
+      </div>
+      <div class="card g" style="padding:14px 16px">
+        <div class="kpi-label">Artículos con stock</div>
+        <div class="kpi-num" id="kpi-tipos">—</div>
+        <div class="text-xs t2">tipos</div>
+      </div>
+    </div>
+
+    <!-- Dos columnas: stock top + historial reciente -->
+    <div class="grid2" style="gap:16px">
+
+      <!-- Top stock -->
+      <div>
+        <div class="flex items-center justify-between" style="margin-bottom:10px">
+          <div class="section-title" style="margin:0">Stock por artículo</div>
+          <button class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="showSec('inventario',null)">Ver todo →</button>
+        </div>
+        <div class="tbl-wrap g">
+          <table class="tbl">
+            <thead><tr><th>Artículo</th><th>Categoría</th><th>Unidad</th><th>Stock</th></tr></thead>
+            <tbody id="inv-dash-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Historial reciente -->
+      <div>
+        <div class="flex items-center justify-between" style="margin-bottom:10px">
+          <div class="section-title" style="margin:0">Últimos movimientos</div>
+          <button class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="showSec('historial',null)">Ver todo →</button>
+        </div>
+        <div class="tbl-wrap g">
+          <table class="tbl">
+            <thead><tr><th>Fecha</th><th>Tipo</th><th>Artículo</th><th>Cantidad</th></tr></thead>
+            <tbody id="dash-hist-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- INVENTARIO -->
+  <div id="sec-inventario" class="hidden">
+    <div id="inv-bars" style="display:grid;gap:12px"></div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div id="sec-historial" class="hidden">
+    <div class="tbl-wrap g">
+      <table class="tbl">
+        <thead><tr><th>Fecha</th><th>Tipo</th><th>Artículo</th><th>Cantidad</th><th>Donante / Detalle</th></tr></thead>
+        <tbody id="hist-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- REGISTRAR -->
+  <div id="sec-registrar" class="hidden">
+    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+    <div class="card g" style="flex:0 0 460px;min-width:280px">
+      <div class="section-title" id="form-title">Registrar movimiento</div>
+      <form id="form-mov" onsubmit="submitMov(event)" style="display:grid;gap:14px">
+        <div>
+          <label class="lbl">Tipo de movimiento</label>
+          <select id="sel-tipo" name="tipo" onchange="onTipoChange()">
+            <option value="recepcion">Recepción (donación)</option>
+            <option value="entrega">Entrega / Canalización</option>
+            <option value="transferencia">Transferencia de salida</option>
+            <option value="merma">Merma</option>
+            <option value="ajuste">Ajuste manual</option>
+          </select>
+        </div>
+        <div>
+          <div class="flex items-center justify-between" style="margin-bottom:5px">
+            <label class="lbl" style="margin:0">Artículo *</label>
+            <button type="button" class="btn-icon" onclick="openModalNuevoArt()" title="Crear nuevo artículo" style="width:26px;height:26px;border-radius:6px;font-size:16px;line-height:1">+</button>
+          </div>
+          <div id="ac-articulo-enc"></div>
+        </div>
+        <div class="grid2">
+          <div>
+            <label class="lbl">Cantidad *</label>
+            <input type="number" id="inp-cantidad" min="0.01" step="0.01" placeholder="0" required>
+          </div>
+          <div id="campo-motivo" class="hidden">
+            <label class="lbl">Motivo *</label>
+            <select id="sel-motivo" required>
+              <option value="">— Selecciona —</option>
+              <option value="caducidad">Caducidad</option>
+              <option value="daño">Daño</option>
+              <option value="pérdida">Pérdida</option>
+              <option value="corrección">Corrección</option>
+            </select>
+          </div>
+        </div>
+        <div id="campo-inst" class="hidden">
+          <label class="lbl">Institución receptora *</label>
+          <select id="sel-inst"><option value="">— selecciona —</option></select>
+        </div>
+        <div id="campo-destino" class="hidden">
+          <label class="lbl">Centro destino *</label>
+          <select id="sel-destino" onchange="_selMapaEnc(this.value)"></select>
+        </div>
+        <div id="campo-ajuste" class="hidden">
+          <label class="lbl">Tipo de ajuste</label>
+          <select id="sel-ajuste-tipo">
+            <option value="positivo">Positivo (suma)</option>
+            <option value="negativo">Negativo (resta)</option>
+          </select>
+        </div>
+        <!-- Donante: solo visible en recepcion -->
+        <div id="campo-donante" class="hidden">
+          <div style="border:1px solid var(--b2);border-radius:12px;padding:14px;background:var(--s1)">
+            <div class="flex items-center justify-between" style="margin-bottom:10px">
+              <label class="lbl" style="margin:0;color:var(--t1);font-size:12px;font-weight:600">Donante</label>
+              <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
+                <input type="checkbox" id="chk-anonimo" checked onchange="toggleAnonimo()">
+                <span class="text-xs t2">Anónimo</span>
+              </label>
+            </div>
+            <div id="donante-fields" class="hidden" style="display:grid;gap:10px">
+              <input id="inp-donante-nombre" placeholder="Nombre del donante *">
+              <div class="grid2">
+                <select id="sel-donante-tipo">
+                  <option value="persona">Persona</option>
+                  <option value="empresa">Empresa</option>
+                  <option value="institucion">Institución</option>
+                  <option value="gobierno">Gobierno</option>
+                </select>
+                <input id="inp-donante-contacto" placeholder="Contacto (opcional)">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="lbl">Observaciones</label>
+          <input type="text" id="inp-obs" placeholder="Opcional">
+        </div>
+        <div id="err-mov" class="text-xs t-err hidden"></div>
+        <button type="submit" class="btn btn-solid w-full">Guardar movimiento</button>
+      </form>
+    </div>
+
+    <!-- Panel de mapa — visible solo cuando tipo=transferencia -->
+    <div id="panel-mapa-enc" class="hidden card g" style="flex:1;min-width:300px;padding:18px">
+      <div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:12px;display:flex;align-items:center;gap:8px">
+        <span style="font-size:16px">📍</span> Selecciona el centro destino en el mapa
+      </div>
+      <div id="mapa-transf-enc" style="height:400px;border-radius:10px;overflow:hidden;background:var(--s2)"></div>
+      <div class="text-xs t2" style="margin-top:8px;text-align:center">Haz clic en un marcador para seleccionar · el selector de arriba también funciona</div>
+    </div>
+
+    </div><!-- /flex wrapper -->
+  </div>
+</main>
+</div>
+
+<!-- Modal: Nuevo artículo rápido -->
+<div class="overlay hidden" id="modal-nuevo-art">
+  <div class="modal g-hi">
+    <div class="modal-title">Nuevo Artículo</div>
+    <form id="form-nuevo-art" onsubmit="submitNuevoArt(event)" style="display:grid;gap:14px">
+      <div><label class="lbl">Nombre *</label><input id="na-nombre" placeholder="Ej. Arroz" required></div>
+      <div class="grid2">
+        <div><label class="lbl">Categoría *</label>
+          <select id="na-categoria">
+            <option value="no_perecedero">No perecedero</option>
+            <option value="perecedero">Perecedero</option>
+            <option value="ropa">Ropa</option>
+            <option value="limpieza">Limpieza</option>
+            <option value="medicamento">Medicamento</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+        <div><label class="lbl">Unidad *</label>
+          <select id="na-unidad">
+            <option value="pieza">Pieza</option>
+            <option value="kg">Kilogramo (kg)</option>
+            <option value="l">Litro (l)</option>
+            <option value="bolsa">Bolsa</option>
+            <option value="caja">Caja</option>
+          </select>
+        </div>
+      </div>
+      <div id="err-nuevo-art" class="text-xs t-err hidden"></div>
+      <div class="flex" style="gap:8px">
+        <button type="button" class="btn btn-ghost flex-1" onclick="document.getElementById('modal-nuevo-art').classList.add('hidden')">Cancelar</button>
+        <button type="submit" class="btn btn-solid flex-1">Crear artículo</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/shared.js"></script>
+<script>
+const user = requireRole('encargado_centro');
+document.getElementById('sb-name').textContent = user.nombre;
+document.getElementById('sb-role').textContent = 'Encargado de Centro';
+syncThemeIcons();
+
+let articulosMap={}, centros=[], campanaActiva=null, centroActual=null, movsCentro=[], inventario=[];
+let acArticulo = null;
+
+const SECS = ['dashboard','inventario','historial','registrar'];
+function showSec(s, el) {
+  SECS.forEach(x => document.getElementById('sec-'+x).classList.toggle('hidden', x!==s));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+}
+
+function setTipo(t) { document.getElementById('sel-tipo').value=t; onTipoChange(); }
+
+function onTipoChange() {
+  const t = document.getElementById('sel-tipo').value;
+  document.getElementById('campo-inst').classList.toggle('hidden', t !== 'entrega');
+  document.getElementById('campo-destino').classList.toggle('hidden', t !== 'transferencia');
+  document.getElementById('campo-ajuste').classList.toggle('hidden', t!=='ajuste');
+  document.getElementById('campo-motivo').classList.toggle('hidden', !['merma','ajuste'].includes(t));
+  document.getElementById('sel-motivo').required = ['merma','ajuste'].includes(t);
+  if (!['merma','ajuste'].includes(t)) document.getElementById('sel-motivo').value = '';
+  document.getElementById('campo-donante').classList.toggle('hidden', t!=='recepcion');
+  if (t !== 'recepcion') document.getElementById('chk-anonimo').checked = true;
+  if (t === 'recepcion') toggleAnonimo();
+  // Mapa de centros
+  const panelMapa = document.getElementById('panel-mapa-enc');
+  if (t === 'transferencia') {
+    panelMapa.classList.remove('hidden');
+    _initMapaEnc();
+  } else {
+    panelMapa.classList.add('hidden');
+  }
+}
+
+// ── Mapa interactivo de centros destino (encargado) ────────────────────────
+let _mapaEnc = null, _markersEnc = {};
+
+function _mkDotIcon(selected) {
+  const c = selected ? '#f97316' : '#6366f1';
+  const s = selected ? '0 0 0 4px rgba(249,115,22,.25)' : '0 2px 6px rgba(0,0,0,.35)';
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:18px;height:18px;border-radius:50%;background:${c};border:3px solid #fff;box-shadow:${s};transition:all .2s"></div>`,
+    iconSize: [18,18], iconAnchor: [9,9],
+  });
+}
+
+function _initMapaEnc() {
+  const el = document.getElementById('mapa-transf-enc');
+  if (!_mapaEnc) {
+    _mapaEnc = L.map(el, {zoomControl:true}).setView([23.63, -102.55], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a>', maxZoom:19
+    }).addTo(_mapaEnc);
+  }
+  Object.values(_markersEnc).forEach(m => _mapaEnc.removeLayer(m));
+  _markersEnc = {};
+
+  const destinos = centros.filter(c => c.id !== centroActual?.id && c.activo && c.lat && c.lng);
+  const currentSel = document.getElementById('sel-destino').value;
+  const bounds = [];
+
+  destinos.forEach(c => {
+    const sel = c.id === currentSel;
+    const mk = L.marker([c.lat, c.lng], {icon: _mkDotIcon(sel)}).addTo(_mapaEnc);
+    mk.bindTooltip(c.nombre, {permanent:true, direction:'top', offset:[0,-12], className:'mapa-lbl'});
+    mk.bindPopup(`<div style="min-width:160px;font-family:inherit">
+      <div style="font-weight:700;font-size:13px;margin-bottom:4px">${c.nombre}</div>
+      <div style="font-size:11px;color:#666;margin-bottom:6px">${c.ubicacion||c.ciudad||''}</div>
+      ${c.cp ? `<div style="font-size:11px;margin-bottom:8px">CP <b>${c.cp}</b></div>` : ''}
+      <button onclick="_selMapaEnc('${c.id}');document.getElementById('sel-destino').value='${c.id}'" style="width:100%;padding:5px;background:#6366f1;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px">Seleccionar →</button>
+    </div>`, {closeButton:false});
+    mk.on('click', () => {
+      document.getElementById('sel-destino').value = c.id;
+      _selMapaEnc(c.id);
+    });
+    _markersEnc[c.id] = mk;
+    bounds.push([c.lat, c.lng]);
+  });
+
+  if (bounds.length) _mapaEnc.fitBounds(bounds, {padding:[40,40]});
+  setTimeout(() => _mapaEnc.invalidateSize(), 120);
+}
+
+function _selMapaEnc(id) {
+  Object.entries(_markersEnc).forEach(([cid, mk]) => mk.setIcon(_mkDotIcon(cid === id)));
+  if (id && _markersEnc[id]) _mapaEnc.setView(_markersEnc[id].getLatLng(), 14, {animate:true, duration:.4});
+}
+
+function toggleAnonimo() {
+  const anonimo = document.getElementById('chk-anonimo').checked;
+  document.getElementById('donante-fields').classList.toggle('hidden', anonimo);
+}
+
+async function load() {
+  const [arts, camps, cens, insts] = await Promise.all([
+    fetch(`${API}/articulos`).then(r=>r.json()),
+    fetch(`${API}/campanas`).then(r=>r.json()),
+    fetch(`${API}/centros`).then(r=>r.json()),
+    fetch(`${API}/instituciones`).then(r=>r.json()),
+  ]);
+
+  articulosMap = Object.fromEntries(arts.map(a=>[a.id,a]));
+  centros = cens;
+  campanaActiva = camps.find(c=>c.activa) || camps[0];
+  centroActual = cens.find(c=>c.id===user.centro_id);
+
+  document.getElementById('sb-centro').textContent = centroActual?.nombre || 'Sin centro';
+  document.getElementById('campana-badge').textContent = campanaActiva ? `Campaña: ${campanaActiva.nombre}` : 'Sin campaña activa';
+
+  acArticulo = mountArticuloSearch('ac-articulo-enc', null);
+
+  // Instituciones receptoras (entrega)
+  const selI = document.getElementById('sel-inst');
+  selI.innerHTML = `<option value="">— selecciona —</option>` + insts.filter(i=>i.activa!==false).map(i=>`<option value="${i.id}">${i.nombre}</option>`).join('');
+
+  // Centros destino (transferencia)
+  const selD = document.getElementById('sel-destino');
+  selD.innerHTML = `<option value="">— selecciona —</option>` + cens.filter(c=>c.id!==user.centro_id&&c.activo).map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+
+  if (centroActual && campanaActiva) {
+    [inventario, movsCentro] = await Promise.all([
+      fetch(`${API}/inventario/${centroActual.id}/${campanaActiva.id}`).then(r=>r.json()),
+      fetch(`${API}/movimientos?centro_id=${centroActual.id}`).then(r=>r.json()),
+    ]);
+    renderDashboard();
+    renderInventario();
+    renderHistorial();
+  }
+}
+
+function renderDashboard() {
+  const total = inventario.reduce((s,i) => s+i.stock, 0);
+
+  // Centro info card
+  document.getElementById('dash-centro-nombre').textContent = centroActual?.nombre || '—';
+  const info = [centroActual?.ubicacion, centroActual?.institucion].filter(Boolean).join(' · ');
+  document.getElementById('dash-centro-info').textContent = info || 'Sin información adicional';
+  if (campanaActiva) {
+    document.getElementById('dash-campana-nombre').textContent = campanaActiva.nombre;
+    const fi = campanaActiva.fecha_inicio ? fmt(campanaActiva.fecha_inicio) : '?';
+    const ff = campanaActiva.fecha_fin   ? fmt(campanaActiva.fecha_fin)    : '?';
+    document.getElementById('dash-campana-fechas').textContent = `${fi} → ${ff}`;
+  }
+
+  // Movement breakdown
+  const entradas    = movsCentro.filter(m => ['recepcion','transferencia_entrada'].includes(m.tipo));
+  const salidas     = movsCentro.filter(m => ['entrega','transferencia_salida'].includes(m.tipo));
+  const mermas      = movsCentro.filter(m => m.tipo === 'merma');
+  const mermasPend  = mermas.filter(m => !m.confirmado);
+
+  document.getElementById('kpi-stock').textContent    = fmtNum(total);
+  document.getElementById('kpi-tipos').textContent    = inventario.filter(i=>i.stock>0).length;
+  document.getElementById('kpi-entradas').textContent = entradas.length;
+  document.getElementById('kpi-entradas-cant').textContent = `${fmtNum(entradas.reduce((s,m)=>s+m.cantidad,0))} uds.`;
+  document.getElementById('kpi-salidas').textContent  = salidas.length;
+  document.getElementById('kpi-salidas-cant').textContent  = `${fmtNum(salidas.reduce((s,m)=>s+m.cantidad,0))} uds.`;
+  document.getElementById('kpi-mermas').textContent   = mermas.length;
+  document.getElementById('kpi-mermas-cant').textContent  = mermasPend.length > 0
+    ? `${mermasPend.length} pendiente${mermasPend.length>1?'s':''} aprobación`
+    : mermas.length > 0 ? 'Todas aprobadas' : 'Sin mermas';
+
+  // Stock table (top 10 with stock)
+  document.getElementById('inv-dash-tbody').innerHTML =
+    inventario.filter(i=>i.stock>0).sort((a,b)=>b.stock-a.stock).slice(0,10).map(i=>`
+    <tr>
+      <td><span class="fw-600">${i.nombre}</span></td>
+      <td class="t2 text-xs">${i.categoria}</td>
+      <td class="t2">${i.unidad}</td>
+      <td class="t-ok fw-600">${fmtNum(i.stock)}</td>
+    </tr>`).join('') || '<tr><td colspan="4" class="t2" style="text-align:center;padding:20px">Sin stock disponible</td></tr>';
+
+  // Recent history (last 8 movements)
+  document.getElementById('dash-hist-tbody').innerHTML =
+    [...movsCentro].reverse().slice(0,8).map(m => {
+      const art = articulosMap[m.articulo_id] || {nombre: m.articulo_id, unidad:''};
+      return `<tr>
+        <td class="text-xs t2">${fmt(m.fecha)}</td>
+        <td>${tipoBadge(m.tipo)}</td>
+        <td>${art.nombre}</td>
+        <td class="${tipoColor(m.tipo)} fw-600">${tipoSigno(m.tipo)}${fmtNum(m.cantidad)} <span class="text-xs t2">${art.unidad}</span></td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="4" class="t2" style="text-align:center;padding:20px">Sin movimientos registrados</td></tr>';
+}
+
+function renderInventario() {
+  const max = Math.max(...inventario.map(i=>i.stock),1);
+  const COLORS = {no_perecedero:'var(--t1)',perecedero:'var(--warn)',ropa:'var(--info)',limpieza:'var(--ok)',medicamento:'var(--err)',otro:'var(--t2)'};
+  document.getElementById('inv-bars').innerHTML = inventario.map(i=>{
+    const pct = Math.max((i.stock/max)*100,2).toFixed(1);
+    const col = COLORS[i.categoria]||'var(--t2)';
+    return `<div class="card g">
+      <div class="flex justify-between items-center mb-2">
+        <span class="fw-600">${i.nombre}</span>
+        <span style="font-size:20px;font-weight:700">${fmtNum(i.stock)} <span class="text-xs t2">${i.unidad}</span></span>
+      </div>
+      <div style="height:6px;border-radius:3px;background:var(--s3)">
+        <div style="height:100%;border-radius:3px;background:${col};width:${pct}%"></div>
+      </div>
+      <div class="text-xs t2 mt-1">${i.categoria}</div>
+    </div>`;
+  }).join('') || '<div class="t2" style="text-align:center;padding:40px">Sin inventario registrado</div>';
+}
+
+function renderHistorial() {
+  document.getElementById('hist-tbody').innerHTML = [...movsCentro].reverse().slice(0,50).map(m=>{
+    const art = articulosMap[m.articulo_id]||{nombre:m.articulo_id,unidad:''};
+    const signo = tipoSigno(m.tipo); const col = tipoColor(m.tipo);
+    let detalle = m.motivo||m.observaciones||'—';
+    if (m.tipo === 'recepcion') {
+      detalle = m.donante
+        ? `<span class="fw-600">${m.donante.nombre}</span> <span class="badge badge-neu">${m.donante.tipo||'persona'}</span>${m.donante.contacto ? ` · ${m.donante.contacto}` : ''}`
+        : '<span class="t2">Anónimo</span>';
+    }
+    return `<tr>
+      <td class="text-xs t2">${fmt(m.fecha)}</td>
+      <td>${tipoBadge(m.tipo)}</td>
+      <td>${art.nombre}</td>
+      <td class="${col} fw-600">${signo}${fmtNum(m.cantidad)} ${art.unidad}</td>
+      <td class="text-xs">${detalle}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" class="t2" style="text-align:center;padding:20px">Sin movimientos</td></tr>';
+}
+
+async function submitMov(e) {
+  e.preventDefault();
+  const tipo = document.getElementById('sel-tipo').value;
+  const errEl = document.getElementById('err-mov');
+  errEl.classList.add('hidden');
+
+  if (!centroActual||!campanaActiva) { errEl.textContent='Sin centro o campaña activa.'; errEl.classList.remove('hidden'); return; }
+
+  const art = acArticulo?.getValue();
+  if (!art) { errEl.textContent='Selecciona un artículo del catálogo.'; errEl.classList.remove('hidden'); return; }
+
+  const cantidad = parseFloat(document.getElementById('inp-cantidad').value);
+  if (!cantidad || cantidad <= 0) { errEl.textContent='La cantidad debe ser mayor a cero.'; errEl.classList.remove('hidden'); return; }
+
+  const obs = document.getElementById('inp-obs').value || '';
+  const motivo  = document.getElementById('sel-motivo').value;
+  const instId  = document.getElementById('sel-inst').value;
+  const destino = document.getElementById('sel-destino').value;
+
+  const base = {centro_id:centroActual.id, campana_id:campanaActiva.id, articulo_id:art.id,
+    cantidad, actor_id:user.id, observaciones:obs};
+
+  // Donante
+  let donante = null;
+  if (tipo === 'recepcion') {
+    const anonimo = document.getElementById('chk-anonimo').checked;
+    if (!anonimo) {
+      const nombre = document.getElementById('inp-donante-nombre').value.trim();
+      if (!nombre) { errEl.textContent='Ingresa el nombre del donante o marca como anónimo.'; errEl.classList.remove('hidden'); return; }
+      donante = {
+        nombre,
+        tipo: document.getElementById('sel-donante-tipo').value,
+        contacto: document.getElementById('inp-donante-contacto').value.trim() || null,
+      };
+    }
+  }
+
+  let ep='', body={};
+  if (tipo==='recepcion') { ep='recepcion'; body={...base, donante}; }
+  else if (tipo==='entrega') {
+    if (!instId) { errEl.textContent='Selecciona la institución receptora.'; errEl.classList.remove('hidden'); return; }
+    ep='entrega'; body={...base, institucion_receptora_id:instId};
+  }
+  else if (tipo==='merma') {
+    if (!motivo) { errEl.textContent='El motivo es obligatorio para merma.'; errEl.classList.remove('hidden'); return; }
+    ep='merma'; body={...base,motivo};
+  }
+  else if (tipo==='transferencia') { ep='transferencia'; body={origen_id:centroActual.id,destino_id:destino,campana_id:campanaActiva.id,articulo_id:art.id,cantidad,actor_id:user.id,observaciones:obs}; }
+  else if (tipo==='ajuste') {
+    if (!motivo) { errEl.textContent='El motivo es obligatorio para ajuste.'; errEl.classList.remove('hidden'); return; }
+    ep='ajuste'; body={...base,tipo:document.getElementById('sel-ajuste-tipo').value||'positivo',motivo};
+  }
+
+  const res = await fetch(`${API}/movimientos/${ep}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const data = await res.json();
+  if (res.ok) {
+    toast('Movimiento registrado');
+    document.getElementById('form-mov').reset();
+    acArticulo.reset();
+    onTipoChange();
+    [inventario, movsCentro] = await Promise.all([
+      fetch(`${API}/inventario/${centroActual.id}/${campanaActiva.id}`).then(r=>r.json()),
+      fetch(`${API}/movimientos?centro_id=${centroActual.id}`).then(r=>r.json()),
+    ]);
+    renderDashboard(); renderInventario(); renderHistorial();
+  } else { errEl.textContent=data.error||'Error al registrar.'; errEl.classList.remove('hidden'); }
+}
+
+function openModalNuevoArt() {
+  document.getElementById('na-nombre').value = '';
+  document.getElementById('err-nuevo-art').classList.add('hidden');
+  document.getElementById('modal-nuevo-art').classList.remove('hidden');
+}
+
+async function submitNuevoArt(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('err-nuevo-art');
+  errEl.classList.add('hidden');
+  const body = {
+    nombre:    document.getElementById('na-nombre').value.trim(),
+    categoria: document.getElementById('na-categoria').value,
+    unidad:    document.getElementById('na-unidad').value,
+  };
+  const res = await fetch(`${API}/articulos`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  const data = await res.json();
+  if (res.ok) {
+    articulosMap[data.id] = data;
+    document.getElementById('modal-nuevo-art').classList.add('hidden');
+    e.target.reset();
+    toast('Artículo creado. Búscalo en el campo de arriba.');
+  } else { errEl.textContent = data.error || 'Error al crear.'; errEl.classList.remove('hidden'); }
+}
+
+document.getElementById('modal-nuevo-art').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-nuevo-art')) document.getElementById('modal-nuevo-art').classList.add('hidden');
+});
+
+load();
+</script>
+</body>
+</html>

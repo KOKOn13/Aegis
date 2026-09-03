@@ -1,0 +1,11 @@
+[
+  {
+    "id": "I001",
+    "nombre": "Hospital Regional",
+    "tipo": "salud",
+    "contacto": "Dra. López",
+    "telefono": "555-0101",
+    "email": "hospital@example.com",
+    "activa": true
+  }
+]
