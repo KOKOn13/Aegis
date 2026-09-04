@@ -34,6 +34,7 @@ from database.sqlite_db import (
 
 app = Flask(__name__, static_folder=".", static_url_path="")
 CORS(app)
+init_db()
 
 
 def ok(data, code: int = 200):
