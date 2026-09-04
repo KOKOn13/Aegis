@@ -5,14 +5,16 @@ Migrates existing JSON data on first run. Single source of truth for all roles.
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-ROOT = Path(__file__).resolve().parent.parent
-DB_PATH = ROOT / "data" / "acopio.db"
+ROOT     = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
+# En Vercel el filesystem raíz es read-only; /tmp es el único directorio escribible
+DB_PATH  = Path("/tmp/acopio.db") if os.environ.get("VERCEL") else ROOT / "data" / "acopio.db"
 
 # ── Connection ────────────────────────────────────────────────────────────────
 
