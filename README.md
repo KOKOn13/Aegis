@@ -238,4 +238,6 @@ Pantallas principales:
 
 ---
 
+https://aegis-vmz2.onrender.com/
+
 *Proyecto desarrollado para Hackathon 2026 · Licencia MIT*
