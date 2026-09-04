@@ -1,0 +1,2276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aegis — Larpers | Hackathon Pitch</title>
+
+  <!-- === FONTS === -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ===========================================
+       CSS CUSTOM PROPERTIES — THEME (Black & White)
+       =========================================== */
+    :root {
+      /* Core palette */
+      --bg:           #000000;
+      --bg-2:         #0a0a0a;
+      --bg-3:         #111111;
+      --glass:        rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.10);
+      --glass-hover:  rgba(255, 255, 255, 0.08);
+
+      /* Accents — white/gray only */
+      --white:        #ffffff;
+      --white-dim:    rgba(255, 255, 255, 0.12);
+      --white-glow:   rgba(255, 255, 255, 0.15);
+      --gray:         rgba(255, 255, 255, 0.5);
+
+      /* Semantic colors — kept for redistribution diagram */
+      --green:        #22c55e;
+      --green-dim:    rgba(34, 197, 94, 0.15);
+      --orange:       #f97316;
+      --orange-dim:   rgba(249, 115, 22, 0.15);
+      --rose:         #f43f5e;
+
+      /* Text */
+      --text-1:  #ffffff;
+      --text-2:  rgba(255, 255, 255, 0.6);
+      --text-3:  rgba(255, 255, 255, 0.35);
+
+      /* Typography */
+      --font-display: 'Syne', sans-serif;
+      --font-body:    'DM Sans', sans-serif;
+      --font-mono:    'DM Mono', monospace;
+
+      /* Clamp sizes */
+      --title-size:    clamp(2rem,   6vw,   5.5rem);
+      --h2-size:       clamp(1.4rem, 3.5vw, 3rem);
+      --h3-size:       clamp(1rem,   2vw,   1.6rem);
+      --body-size:     clamp(0.8rem, 1.3vw, 1.05rem);
+      --small-size:    clamp(0.7rem, 1vw,   0.875rem);
+      --label-size:    clamp(0.6rem, 0.9vw, 0.78rem);
+
+      /* Spacing */
+      --slide-padding: clamp(2rem, 5vw, 5rem);
+      --content-gap:   clamp(0.75rem, 2vw, 2rem);
+      --element-gap:   clamp(0.4rem,  1vw, 1rem);
+
+      /* Motion */
+      --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      --dur: 0.65s;
+    }
+
+    /* ===========================================
+       RESET & BASE
+       =========================================== */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text-1);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html {
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+    }
+
+    .slide {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      scroll-snap-align: start;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .slide-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      max-height: 100%;
+      overflow: hidden;
+      padding: var(--slide-padding);
+    }
+
+    img, .image-container {
+      max-width: 100%;
+      max-height: min(50vh, 400px);
+      object-fit: contain;
+    }
+
+    @media (max-height: 700px) {
+      :root {
+        --slide-padding: clamp(1rem, 3vw, 2.5rem);
+        --content-gap:   clamp(0.5rem, 1.5vw, 1rem);
+        --title-size:    clamp(1.5rem, 5vw, 3rem);
+        --h2-size:       clamp(1.1rem, 3vw, 2rem);
+      }
+    }
+
+    @media (max-height: 600px) {
+      :root {
+        --slide-padding: clamp(0.75rem, 2.5vw, 1.5rem);
+        --title-size:    clamp(1.2rem, 4vw, 2rem);
+        --body-size:     clamp(0.65rem, 1.1vw, 0.9rem);
+      }
+      .nav-dots, .keyboard-hint { display: none; }
+    }
+
+    @media (max-height: 500px) {
+      :root {
+        --slide-padding: clamp(0.5rem, 2vw, 1rem);
+        --title-size:    clamp(1rem, 3.5vw, 1.5rem);
+        --h2-size:       clamp(0.9rem, 2.5vw, 1.25rem);
+        --body-size:     clamp(0.65rem, 1vw, 0.85rem);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+      }
+    }
+
+    /* ===========================================
+       SLIDE WRAPPER
+       =========================================== */
+    #slides-wrapper {
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .slides-track {
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.7s var(--ease-expo);
+      will-change: transform;
+    }
+
+    /* ===========================================
+       GLOBAL UI — PROGRESS BAR
+       =========================================== */
+    #progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #ffffff, rgba(255,255,255,0.4));
+      transition: width 0.5s var(--ease-expo);
+      z-index: 100;
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* ===========================================
+       GLOBAL UI — SLIDE COUNTER
+       =========================================== */
+    #slide-counter {
+      position: fixed;
+      bottom: clamp(1rem, 2.5vh, 2rem);
+      right: clamp(1rem, 2.5vw, 2rem);
+      font-family: var(--font-mono);
+      font-size: var(--label-size);
+      color: var(--text-3);
+      letter-spacing: 0.08em;
+      z-index: 100;
+      background: rgba(0,0,0,0.4);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(8px);
+    }
+
+    /* ===========================================
+       GLOBAL UI — NAV DOTS
+       =========================================== */
+    #nav-dots {
+      position: fixed;
+      left: clamp(0.75rem, 2vw, 1.5rem);
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 100;
+    }
+
+    .nav-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-3);
+      cursor: pointer;
+      transition: all 0.3s var(--ease-expo);
+      border: none;
+      padding: 0;
+    }
+
+    .nav-dot.active {
+      background: #ffffff;
+      transform: scale(1.5);
+    }
+
+    /* ===========================================
+       GLOBAL UI — KEYBOARD HINT
+       =========================================== */
+    .keyboard-hint {
+      position: fixed;
+      bottom: clamp(1rem, 2.5vh, 2rem);
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: var(--label-size);
+      color: var(--text-3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 100;
+      opacity: 0.7;
+    }
+
+    .key-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--glass-border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: var(--font-mono);
+      font-size: 0.7em;
+      background: var(--glass);
+      color: var(--text-2);
+    }
+
+    /* ===========================================
+       SHARED SLIDE COMPONENTS
+       =========================================== */
+
+    /* Accent top bar */
+    .slide-accent-top {
+      height: 3px;
+      width: 100%;
+      background: linear-gradient(90deg, #fff, rgba(255,255,255,0.2), transparent);
+      flex-shrink: 0;
+    }
+
+    /* Glassmorphism card */
+    .glass-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: clamp(10px, 1.5vw, 18px);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    /* Slide label */
+    .slide-label {
+      font-family: var(--font-mono);
+      font-size: var(--label-size);
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: clamp(0.4rem, 0.8vh, 0.75rem);
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-size: var(--title-size);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      color: var(--text-1);
+    }
+
+    h2 {
+      font-family: var(--font-display);
+      font-size: var(--h2-size);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      color: var(--text-1);
+    }
+
+    h3 {
+      font-family: var(--font-display);
+      font-size: var(--h3-size);
+      font-weight: 600;
+      color: var(--text-1);
+    }
+
+    p {
+      font-size: var(--body-size);
+      line-height: 1.6;
+      color: var(--text-2);
+    }
+
+    /* Highlight text — white */
+    .hl {
+      color: #ffffff;
+      text-decoration: underline;
+      text-decoration-color: rgba(255,255,255,0.3);
+      text-underline-offset: 4px;
+    }
+
+    /* ===========================================
+       REVEAL ANIMATIONS
+       =========================================== */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity var(--dur) var(--ease-expo),
+                  transform var(--dur) var(--ease-expo);
+    }
+
+    .slide.visible .reveal {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-left {
+      opacity: 0;
+      transform: translateX(-32px);
+      transition: opacity var(--dur) var(--ease-expo),
+                  transform var(--dur) var(--ease-expo);
+    }
+
+    .slide.visible .reveal-left {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .reveal-right {
+      opacity: 0;
+      transform: translateX(32px);
+      transition: opacity var(--dur) var(--ease-expo),
+                  transform var(--dur) var(--ease-expo);
+    }
+
+    .slide.visible .reveal-right {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .reveal-scale {
+      opacity: 0;
+      transform: scale(0.92);
+      transition: opacity var(--dur) var(--ease-expo),
+                  transform var(--dur) var(--ease-expo);
+    }
+
+    .slide.visible .reveal-scale {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Stagger delays */
+    .d1 { transition-delay: 0.08s; }
+    .d2 { transition-delay: 0.18s; }
+    .d3 { transition-delay: 0.28s; }
+    .d4 { transition-delay: 0.38s; }
+    .d5 { transition-delay: 0.48s; }
+    .d6 { transition-delay: 0.58s; }
+    .d7 { transition-delay: 0.68s; }
+
+    /* ===========================================
+       MESH BACKGROUND
+       =========================================== */
+    .mesh-bg {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      animation: float 12s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33%       { transform: translate(30px, -20px) scale(1.05); }
+      66%       { transform: translate(-20px, 15px) scale(0.97); }
+    }
+
+    /* Grid pattern overlay — subtle white lines */
+    .grid-overlay {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .slide > .slide-content, .slide > .slide-accent-top {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ===========================================
+       SLIDE 1: TITLE
+       =========================================== */
+    .slide-title {
+      background: var(--bg);
+    }
+
+    .title-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      height: 100%;
+      gap: var(--content-gap);
+    }
+
+    .team-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 100px;
+      padding: clamp(4px, 0.6vh, 8px) clamp(12px, 1.5vw, 20px);
+      font-family: var(--font-mono);
+      font-size: var(--label-size);
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 0.1em;
+    }
+
+    .title-main {
+      line-height: 1;
+    }
+
+    .title-accent {
+      color: #ffffff;
+      display: block;
+    }
+
+    .title-tagline {
+      font-size: var(--h3-size);
+      color: var(--text-2);
+      font-weight: 400;
+      max-width: 55ch;
+      line-height: 1.5;
+    }
+
+    .title-stack-row {
+      display: flex;
+      align-items: center;
+      gap: clamp(6px, 1vw, 12px);
+      flex-wrap: wrap;
+    }
+
+    /* Demo link button */
+    .demo-link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: clamp(8px, 1.2vh, 14px) clamp(16px, 2vw, 28px);
+      border-radius: 100px;
+      background: #ffffff;
+      color: #000000;
+      font-weight: 700;
+      font-size: var(--body-size);
+      letter-spacing: 0.02em;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .demo-link-btn:hover {
+      opacity: 0.85;
+    }
+
+    /* ===========================================
+       PILL / BADGE
+       =========================================== */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: clamp(3px, 0.5vh, 6px) clamp(8px, 1vw, 14px);
+      border-radius: 100px;
+      font-size: var(--small-size);
+      font-weight: 500;
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+      color: var(--text-2);
+      white-space: nowrap;
+    }
+
+    .pill.white  { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.25); color: #ffffff; }
+    .pill.green  { background: var(--green-dim);  border-color: rgba(34,197,94,0.3);  color: #4ade80; }
+    .pill.orange { background: var(--orange-dim); border-color: rgba(249,115,22,0.3); color: #fb923c; }
+
+    /* ===========================================
+       SLIDE 2: EL PROBLEMA
+       =========================================== */
+    .problema-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: var(--element-gap);
+      margin-top: var(--content-gap);
+    }
+
+    .problema-card {
+      padding: clamp(1rem, 2vh, 1.75rem) clamp(0.75rem, 1.5vw, 1.5rem);
+      border-radius: clamp(10px, 1.2vw, 16px);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.4rem, 0.8vh, 0.75rem);
+    }
+
+    .problema-icon {
+      display: flex;
+      align-items: center;
+      line-height: 1;
+    }
+
+    .problema-card h3 {
+      font-size: var(--h3-size);
+    }
+
+    .problema-card p {
+      font-size: var(--small-size);
+      line-height: 1.55;
+    }
+
+    .stat-callout {
+      margin-top: var(--content-gap);
+      padding: clamp(0.75rem, 1.5vh, 1.25rem) clamp(1rem, 2vw, 2rem);
+      border-radius: clamp(8px, 1vw, 14px);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* ===========================================
+       SLIDE 3: LA SOLUCION
+       =========================================== */
+    .solucion-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(1.5rem, 3vw, 3rem);
+      align-items: center;
+      margin-top: var(--content-gap);
+    }
+
+    .solucion-features {
+      display: flex;
+      flex-direction: column;
+      gap: var(--element-gap);
+    }
+
+    .feat-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: clamp(0.5rem, 1vh, 0.875rem) clamp(0.75rem, 1.2vw, 1.25rem);
+      border-radius: 10px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+    }
+
+    .feat-row .icon {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+      color: rgba(255,255,255,0.6);
+    }
+
+    .feat-row-text { flex: 1; }
+
+    .feat-row-text strong {
+      font-size: var(--small-size);
+      font-weight: 600;
+      color: var(--text-1);
+      display: block;
+    }
+
+    .feat-row-text span {
+      font-size: calc(var(--small-size) * 0.92);
+      color: var(--text-3);
+    }
+
+    .kd-box {
+      padding: clamp(1.25rem, 2.5vh, 2.5rem) clamp(1rem, 2vw, 2rem);
+      border-radius: clamp(12px, 1.5vw, 20px);
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.05);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.5rem, 1vh, 1rem);
+    }
+
+    .kd-label {
+      font-family: var(--font-mono);
+      font-size: var(--label-size);
+      color: rgba(255,255,255,0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .kd-box h3 {
+      font-size: clamp(1.1rem, 2.2vw, 1.8rem);
+      line-height: 1.2;
+    }
+
+    /* ===========================================
+       SLIDE 4: DIFERENCIADOR
+       =========================================== */
+    .redis-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(1rem, 2.5vw, 2.5rem);
+      margin: var(--content-gap) 0;
+    }
+
+    .redis-box {
+      flex: 1;
+      max-width: min(40vw, 320px);
+      padding: clamp(1rem, 2vh, 2rem) clamp(0.75rem, 1.5vw, 1.5rem);
+      border-radius: clamp(12px, 1.5vw, 18px);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.4rem, 0.8vh, 0.75rem);
+      position: relative;
+    }
+
+    .redis-box.origen {
+      border: 2px solid rgba(34, 197, 94, 0.4);
+      background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(34,197,94,0.04));
+    }
+
+    .redis-box.destino {
+      border: 2px solid rgba(249, 115, 22, 0.4);
+      background: linear-gradient(135deg, rgba(249,115,22,0.12), rgba(249,115,22,0.04));
+    }
+
+    .redis-box-label {
+      font-family: var(--font-mono);
+      font-size: var(--label-size);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .redis-box.origen .redis-box-label { color: #4ade80; }
+    .redis-box.destino .redis-box-label { color: #fb923c; }
+
+    .redis-box h3 {
+      font-size: clamp(0.9rem, 1.8vw, 1.3rem);
+    }
+
+    .redis-stock-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: clamp(4px, 0.6vh, 8px) clamp(8px, 1vw, 12px);
+      border-radius: 8px;
+      font-size: var(--small-size);
+    }
+
+    .redis-box.origen .redis-stock-row {
+      background: rgba(34,197,94,0.12);
+    }
+
+    .redis-box.destino .redis-stock-row {
+      background: rgba(249,115,22,0.12);
+    }
+
+    .stock-num {
+      font-family: var(--font-mono);
+      font-weight: 500;
+    }
+
+    .redis-box.origen .stock-num { color: #4ade80; }
+    .redis-box.destino .stock-num { color: #fb923c; }
+
+    .redis-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .arrow-line {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .arrow-shaft {
+      height: 2px;
+      width: clamp(40px, 8vw, 100px);
+      background: linear-gradient(90deg, #4ade80, rgba(255,255,255,0.5), #fb923c);
+    }
+
+    .arrow-head {
+      width: 0;
+      height: 0;
+      border-top: 7px solid transparent;
+      border-bottom: 7px solid transparent;
+      border-left: 12px solid #fb923c;
+    }
+
+    .arrow-label {
+      font-family: var(--font-mono);
+      font-size: var(--label-size);
+      color: rgba(255,255,255,0.7);
+      text-align: center;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 100px;
+      padding: 3px 10px;
+      white-space: nowrap;
+    }
+
+    .redis-cta {
+      margin-top: var(--content-gap);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: clamp(8px, 1.2vh, 14px) clamp(16px, 2vw, 28px);
+      border-radius: 100px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #ffffff;
+      font-weight: 600;
+      font-size: var(--body-size);
+    }
+
+    .redis-flow-desc {
+      text-align: center;
+      max-width: 70ch;
+      margin: 0 auto;
+    }
+
+    /* ===========================================
+       SLIDE 5: FUNCIONALIDADES MVP
+       =========================================== */
+    .mvp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--element-gap);
+      margin-top: var(--content-gap);
+    }
+
+    .mvp-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: clamp(0.6rem, 1.2vh, 1rem) clamp(0.75rem, 1.2vw, 1.25rem);
+      border-radius: 10px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+    }
+
+    .mvp-icon {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .mvp-text strong {
+      font-size: var(--small-size);
+      font-weight: 600;
+      color: var(--text-1);
+      display: block;
+    }
+
+    .mvp-text span {
+      font-size: calc(var(--small-size) * 0.9);
+      color: var(--text-3);
+    }
+
+    /* ===========================================
+       SLIDE 6: ARQUITECTURA / STACK
+       =========================================== */
+    .stack-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(1rem, 2vw, 2rem);
+      margin-top: var(--content-gap);
+    }
+
+    .stack-group {
+      padding: clamp(0.75rem, 1.5vh, 1.5rem) clamp(0.75rem, 1.5vw, 1.5rem);
+      border-radius: clamp(10px, 1.2vw, 16px);
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+    }
+
+    .stack-group-label {
+      font-family: var(--font-mono);
+      font-size: var(--label-size);
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: clamp(6px, 1vh, 12px);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stack-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .stack-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: clamp(4px, 0.6vh, 8px) clamp(10px, 1.2vw, 16px);
+      border-radius: 8px;
+      font-size: var(--small-size);
+      font-weight: 500;
+      border: 1px solid var(--glass-border);
+      white-space: nowrap;
+    }
+
+    .arch-diagram {
+      grid-column: 1 / -1;
+      padding: clamp(0.6rem, 1.2vh, 1.25rem) clamp(0.75rem, 1.5vw, 1.5rem);
+      border-radius: clamp(10px, 1.2vw, 16px);
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(0.5rem, 1vw, 1rem);
+      flex-wrap: wrap;
+    }
+
+    .arch-node {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--small-size);
+      color: var(--text-2);
+      white-space: nowrap;
+    }
+
+    .arch-arrow {
+      color: var(--text-3);
+      font-size: clamp(0.8rem, 1.2vw, 1rem);
+    }
+
+    /* ===========================================
+       SLIDE 7: MAPA INTERACTIVO
+       =========================================== */
+    .map-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.3fr;
+      gap: clamp(1.5rem, 3vw, 3rem);
+      align-items: center;
+      margin-top: var(--content-gap);
+    }
+
+    .map-mockup {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4/3;
+      max-height: min(45vh, 360px);
+      border-radius: clamp(10px, 1.5vw, 18px);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: #050505;
+    }
+
+    .map-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(255,255,255,0.03) 30px, rgba(255,255,255,0.03) 31px),
+        repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(255,255,255,0.03) 30px, rgba(255,255,255,0.03) 31px);
+    }
+
+    .map-pin {
+      position: absolute;
+      width: clamp(8px, 1.2vw, 14px);
+      height: clamp(8px, 1.2vw, 14px);
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+    }
+
+    .map-pin.green  { background: var(--green);  box-shadow: 0 0 10px rgba(34,197,94,0.7); }
+    .map-pin.white  { background: #ffffff;        box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+    .map-pin.orange { background: var(--orange);  box-shadow: 0 0 10px rgba(249,115,22,0.7); }
+    .map-pin.gray   { background: rgba(255,255,255,0.5); box-shadow: 0 0 8px rgba(255,255,255,0.3); }
+    .map-pin.rose   { background: var(--rose);    box-shadow: 0 0 10px rgba(244,63,94,0.7); }
+
+    .map-route {
+      position: absolute;
+      background: linear-gradient(90deg, rgba(34,197,94,0.4), rgba(255,255,255,0.3));
+      height: 1px;
+      transform-origin: left center;
+    }
+
+    .map-label {
+      position: absolute;
+      bottom: clamp(6px, 1vh, 12px);
+      left: clamp(6px, 1vw, 12px);
+      font-family: var(--font-mono);
+      font-size: calc(var(--label-size) * 0.85);
+      color: rgba(255,255,255,0.5);
+      background: rgba(0,0,0,0.75);
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .map-tooltip {
+      position: absolute;
+      background: rgba(0,0,0,0.9);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: calc(var(--label-size) * 0.85);
+      color: var(--text-2);
+      white-space: nowrap;
+    }
+
+    .map-features-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--element-gap);
+    }
+
+    .map-feat {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: clamp(0.5rem, 1vh, 0.875rem) clamp(0.75rem, 1.2vw, 1.25rem);
+      border-radius: 10px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+    }
+
+    .map-feat .icon {
+      flex-shrink: 0;
+      color: rgba(255,255,255,0.5);
+    }
+
+    /* ===========================================
+       SLIDE 8: CUENTAS DE PRUEBA
+       =========================================== */
+    .demo-table-wrap {
+      margin-top: var(--content-gap);
+      border-radius: clamp(10px, 1.5vw, 18px);
+      overflow: hidden;
+      border: 1px solid var(--glass-border);
+    }
+
+    .demo-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .demo-table thead tr {
+      background: rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .demo-table thead th {
+      padding: clamp(8px, 1.5vh, 14px) clamp(12px, 2vw, 24px);
+      text-align: left;
+      font-family: var(--font-mono);
+      font-size: var(--label-size);
+      color: rgba(255,255,255,0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 500;
+    }
+
+    .demo-table tbody tr {
+      border-bottom: 1px solid var(--glass-border);
+      transition: background 0.2s;
+    }
+
+    .demo-table tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    .demo-table tbody tr:hover {
+      background: var(--glass-hover);
+    }
+
+    .demo-table tbody td {
+      padding: clamp(8px, 1.5vh, 14px) clamp(12px, 2vw, 24px);
+      font-size: var(--small-size);
+      color: var(--text-2);
+    }
+
+    .demo-table tbody td:first-child {
+      font-family: var(--font-mono);
+      color: #ffffff;
+    }
+
+    .demo-table tbody td:nth-child(2) {
+      font-family: var(--font-mono);
+      color: var(--text-3);
+    }
+
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 10px;
+      border-radius: 100px;
+      font-size: calc(var(--small-size) * 0.9);
+    }
+
+    .demo-note {
+      margin-top: var(--element-gap);
+      padding: clamp(8px, 1.2vh, 14px) clamp(12px, 1.8vw, 20px);
+      border-radius: 10px;
+      background: rgba(249,115,22,0.08);
+      border: 1px solid rgba(249,115,22,0.2);
+      font-size: var(--small-size);
+      color: #fb923c;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ===========================================
+       SLIDE 9: IA UTILIZADA
+       =========================================== */
+    .ia-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(1.5rem, 3vw, 3rem);
+      align-items: start;
+      margin-top: var(--content-gap);
+    }
+
+    .ia-main-card {
+      padding: clamp(1rem, 2vh, 2rem) clamp(1rem, 2vw, 2rem);
+      border-radius: clamp(12px, 1.5vw, 20px);
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .ia-logo {
+      display: flex;
+      align-items: center;
+      margin-bottom: clamp(0.4rem, 0.8vh, 0.75rem);
+    }
+
+    .ia-uses {
+      display: flex;
+      flex-direction: column;
+      gap: var(--element-gap);
+    }
+
+    .ia-use-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: clamp(5px, 0.8vh, 10px) clamp(8px, 1.2vw, 14px);
+      border-radius: 8px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      font-size: var(--small-size);
+      color: var(--text-2);
+    }
+
+    .ia-disclaimer {
+      margin-top: var(--content-gap);
+      padding: clamp(10px, 1.5vh, 16px) clamp(12px, 1.8vw, 20px);
+      border-radius: clamp(8px, 1vw, 14px);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.12);
+      font-size: var(--small-size);
+      color: var(--text-2);
+      line-height: 1.6;
+    }
+
+    /* ===========================================
+       SLIDE 10: LIMITACIONES & PROXIMOS PASOS
+       =========================================== */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(1.5rem, 3vw, 3rem);
+      margin-top: var(--content-gap);
+    }
+
+    .two-col-card {
+      padding: clamp(1rem, 2vh, 2rem) clamp(1rem, 2vw, 2rem);
+      border-radius: clamp(12px, 1.5vw, 18px);
+    }
+
+    .two-col-card.lim {
+      border: 1px solid rgba(244,63,94,0.25);
+      background: rgba(244,63,94,0.06);
+    }
+
+    .two-col-card.next {
+      border: 1px solid rgba(34,197,94,0.25);
+      background: rgba(34,197,94,0.06);
+    }
+
+    .col-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: clamp(0.6rem, 1.2vh, 1.25rem);
+    }
+
+    .col-title {
+      font-family: var(--font-display);
+      font-size: var(--h3-size);
+      font-weight: 700;
+    }
+
+    .two-col-card.lim .col-title { color: #fb7185; }
+    .two-col-card.next .col-title { color: #4ade80; }
+
+    .col-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(6px, 1vh, 10px);
+    }
+
+    .col-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: var(--small-size);
+      color: var(--text-2);
+      line-height: 1.5;
+    }
+
+    .col-bullet {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* ===========================================
+       SLIDE 11: EQUIPO — CLOSING
+       =========================================== */
+    .closing-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: var(--content-gap);
+      height: 100%;
+    }
+
+    .closing-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: clamp(60px, 10vw, 100px);
+      height: clamp(60px, 10vw, 100px);
+      border-radius: 24px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .closing-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: clamp(10px, 1.5vh, 16px) clamp(20px, 3vw, 36px);
+      border-radius: 100px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: var(--body-size);
+      letter-spacing: 0.02em;
+    }
+
+    .closing-links {
+      display: flex;
+      align-items: center;
+      gap: clamp(8px, 1.5vw, 16px);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .team-names {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(4px, 0.8vh, 8px);
+      align-items: center;
+    }
+
+    .team-name {
+      font-family: var(--font-display);
+      font-size: var(--body-size);
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+      letter-spacing: 0.02em;
+    }
+
+    /* ===========================================
+       ANIMATIONS
+       =========================================== */
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.1; }
+      50%       { opacity: 0.2; }
+    }
+
+    @keyframes pin-pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%       { transform: scale(1.3); opacity: 0.7; }
+    }
+
+    .map-pin { animation: pin-pulse 2.5s ease-in-out infinite; }
+    .map-pin:nth-child(2) { animation-delay: 0.5s; }
+    .map-pin:nth-child(3) { animation-delay: 1s; }
+    .map-pin:nth-child(4) { animation-delay: 1.5s; }
+    .map-pin:nth-child(5) { animation-delay: 0.3s; }
+
+  </style>
+</head>
+<body>
+
+  <!-- === GLOBAL UI CHROME === -->
+  <div id="progress-bar"></div>
+  <div id="slide-counter">1 / 11</div>
+  <nav id="nav-dots" aria-label="Navegación de diapositivas"></nav>
+  <div class="keyboard-hint" aria-hidden="true">
+    <span class="key-badge">←</span>
+    <span class="key-badge">→</span>
+    <span style="color:var(--text-3); font-size:var(--label-size)">navegar</span>
+    <span class="key-badge">␣</span>
+    <span style="color:var(--text-3); font-size:var(--label-size)">avanzar</span>
+  </div>
+
+  <!-- === SLIDES WRAPPER === -->
+  <div id="slides-wrapper" aria-label="Presentación">
+    <div class="slides-track" id="slides-track">
+
+      <!-- ====================================================
+           SLIDE 1: TITLE
+           ==================================================== -->
+      <section class="slide slide-title" id="slide-1" aria-label="Título">
+        <div class="mesh-bg">
+          <div class="orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(255,255,255,0.08),transparent 70%);top:-10%;right:-5%;animation-duration:14s;"></div>
+          <div class="orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(255,255,255,0.05),transparent 70%);bottom:5%;left:-5%;animation-duration:18s;animation-delay:-5s;"></div>
+          <div class="orb" style="width:250px;height:250px;background:radial-gradient(circle,rgba(255,255,255,0.04),transparent 70%);bottom:30%;right:20%;animation-duration:10s;animation-delay:-2s;"></div>
+        </div>
+        <div class="grid-overlay"></div>
+        <div class="slide-accent-top"></div>
+
+        <div class="slide-content">
+          <div class="title-inner">
+
+            <!-- Team badge -->
+            <div class="team-badge reveal d1">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 1L8.8 5.2L13 6L9.5 9.4L10.4 13.5L7 11.5L3.6 13.5L4.5 9.4L1 6L5.2 5.2L7 1Z" fill="rgba(255,255,255,0.7)"/>
+              </svg>
+              <span>Larpers · Hackathon 2026</span>
+            </div>
+
+            <!-- Main heading -->
+            <div class="title-main reveal d2">
+              <h1>
+                <span class="title-accent">Aegis</span>
+              </h1>
+            </div>
+
+            <!-- Tagline -->
+            <p class="title-tagline reveal d3">
+              Sistema de Gestión de Donaciones — conectando centros de acopio en México con inteligencia, trazabilidad y redistribución automática.
+            </p>
+
+            <!-- Stack pills -->
+            <div class="title-stack-row reveal d4">
+              <span class="pill white">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 6.5h5M6.5 4v5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                Python · Flask
+              </span>
+              <span class="pill">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1.5" y="2.5" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 5.5h4M4.5 7.5h2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                SQLite
+              </span>
+              <span class="pill">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 2C4.5 2 3 3.5 3 5.5c0 3 3.5 5.5 3.5 5.5S10 8.5 10 5.5C10 3.5 8.5 2 6.5 2Z" stroke="currentColor" stroke-width="1.2"/><circle cx="6.5" cy="5.5" r="1.2" fill="currentColor"/></svg>
+                Leaflet.js
+              </span>
+              <span class="pill">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5h1.5M9.5 6.5H11M6.5 2v1.5M6.5 9.5V11M4.2 4.2l1 1M7.8 7.8l1 1M7.8 4.2l-1 1M4.2 7.8l-1 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="6.5" cy="6.5" r="1.8" stroke="currentColor" stroke-width="1.2"/></svg>
+                UI System
+              </span>
+            </div>
+
+            <!-- Demo link -->
+            <div class="reveal d5">
+              <a href="https://aegis-vmz2.onrender.com/" target="_blank" rel="noopener noreferrer" class="demo-link-btn">
+                Ver demo en vivo →
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================
+           SLIDE 2: EL PROBLEMA
+           ==================================================== -->
+      <section class="slide" id="slide-2" aria-label="El Problema">
+        <div class="mesh-bg">
+          <div class="orb" style="width:350px;height:350px;background:radial-gradient(circle,rgba(244,63,94,0.15),transparent 70%);top:10%;right:10%;animation-duration:16s;"></div>
+        </div>
+        <div class="grid-overlay"></div>
+        <div class="slide-accent-top"></div>
+
+        <div class="slide-content">
+          <div class="slide-label reveal d1">02 — El Problema</div>
+          <h2 class="reveal d2">Los centros de acopio operan en <span class="hl">aislamiento</span></h2>
+
+          <div class="problema-grid">
+
+            <div class="glass-card problema-card reveal d3">
+              <div class="problema-icon">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="4" y="4" width="20" height="20" rx="4" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+                  <path d="M9 14h10M9 10h6M9 18h4" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <h3>Coordinación por WhatsApp</h3>
+              <p>Sin sistema central: los coordinadores gestionan donaciones, traslados y mermas via chat. Errores, demoras y pérdidas de información.</p>
+            </div>
+
+            <div class="glass-card problema-card reveal d4">
+              <div class="problema-icon">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="4" y="10" width="20" height="14" rx="2" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+                  <path d="M9 10V8a5 5 0 0110 0v2" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+                  <circle cx="14" cy="17" r="2" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+                </svg>
+              </div>
+              <h3>Inventario invisible</h3>
+              <p>Un centro tiene exceso de artículos mientras otro enfrenta escasez del mismo ítem. Sin datos en tiempo real, la redistribución es imposible.</p>
+            </div>
+
+            <div class="glass-card problema-card reveal d5">
+              <div class="problema-icon">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="14" cy="14" r="10" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+                  <path d="M14 9v5l3 3" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M9 9l10 10M19 9L9 19" stroke="rgba(255,255,255,0.25)" stroke-width="1" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <h3>Sin trazabilidad</h3>
+              <p>Mermas sin registro, entregas no confirmadas, campañas sin seguimiento. La rendición de cuentas es manual y propensa a errores.</p>
+            </div>
+
+          </div>
+
+          <div class="stat-callout reveal d6">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+              <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+              <path d="M12 7v5" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="12" cy="16" r="1" fill="rgba(255,255,255,0.6)"/>
+            </svg>
+            <p style="color:rgba(255,255,255,0.7); font-size: var(--small-size);">
+              <strong style="color:#ffffff">El resultado:</strong> toneladas de recursos mal distribuidos en cada desastre o emergencia. México necesita una solución digital, no más grupos de WhatsApp.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================
+           SLIDE 3: LA SOLUCION
+           ==================================================== -->
+      <section class="slide" id="slide-3" aria-label="La Solución">
+        <div class="mesh-bg">
+          <div class="orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(255,255,255,0.06),transparent 70%);bottom:0;left:-5%;animation-duration:12s;"></div>
+        </div>
+        <div class="grid-overlay"></div>
+        <div class="slide-accent-top"></div>
+
+        <div class="slide-content">
+          <div class="slide-label reveal d1">03 — La Solución</div>
+          <h2 class="reveal d2"><span class="hl">Aegis</span> — Una plataforma web para gestión integral de donaciones</h2>
+
+          <div class="solucion-layout">
+
+            <div class="solucion-features reveal-left d3">
+              <div class="feat-row">
+                <span class="icon">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6" cy="6" r="3" stroke="currentColor" stroke-width="1.3"/><circle cx="12" cy="6" r="3" stroke="currentColor" stroke-width="1.3"/><path d="M1 16c0-2.8 2.2-5 5-5h6c2.8 0 5 2.2 5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                </span>
+                <div class="feat-row-text">
+                  <strong>5 roles diferenciados</strong>
+                  <span>Coordinador, encargado, voluntario, institución, líder de campaña</span>
+                </div>
+              </div>
+              <div class="feat-row">
+                <span class="icon">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="10" width="3" height="6" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="7.5" y="6" width="3" height="10" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="13" y="2" width="3" height="14" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
+                </span>
+                <div class="feat-row-text">
+                  <strong>Inventario en tiempo real</strong>
+                  <span>Cada centro ve sus existencias al instante</span>
+                </div>
+              </div>
+              <div class="feat-row">
+                <span class="icon">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2C6 2 3.5 4.5 3.5 7.5C3.5 12 9 16 9 16S14.5 12 14.5 7.5C14.5 4.5 12 2 9 2Z" stroke="currentColor" stroke-width="1.3"/><circle cx="9" cy="7.5" r="2" stroke="currentColor" stroke-width="1.3"/></svg>
+                </span>
+                <div class="feat-row-text">
+                  <strong>Mapa interactivo</strong>
+                  <span>Geocodificación real con Leaflet + Nominatim, pin arrastrable</span>
+                </div>
+              </div>
+              <div class="feat-row">
+                <span class="icon">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M14 4L4 14M4 4l10 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M9 2v2M9 14v2M2 9h2M14 9h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                </span>
+                <div class="feat-row-text">
+                  <strong>Flujo de merma</strong>
+                  <span>Encargado registra → coordinador aprueba/rechaza</span>
+                </div>
+              </div>
+              <div class="feat-row">
+                <span class="icon">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.3"/><path d="M9 5v4l3 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                </span>
+                <div class="feat-row-text">
+                  <strong>Campañas con metas</strong>
+                  <span>Barras de progreso y exportación CSV</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="kd-box reveal-right d4">
+              <div class="kd-label">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline;margin-right:4px"><path d="M6 1l1.5 3.5L11 5 8.5 7.5l.6 3.5L6 9.5 3 11l.6-3.5L1 5l3.5-.5L6 1Z" fill="rgba(255,255,255,0.6)"/></svg>
+                Diferenciador clave
+              </div>
+              <h3>Motor de redistribución automática</h3>
+              <p style="font-size: var(--small-size);">
+                Detecta desequilibrios entre centros — un centro con superávit y otro con déficit del mismo artículo — y genera sugerencias de traslado <strong style="color:#ffffff">con un solo clic</strong>.
+              </p>
+              <div style="margin-top: 0.5rem;">
+                <span class="pill white">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 6l1.5 1.5L8 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Redistribución automática
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================
+           SLIDE 4: DIFERENCIADOR — REDISTRIBUTION ENGINE
+           ==================================================== -->
+      <section class="slide" id="slide-4" aria-label="Diferenciador">
+        <div class="mesh-bg">
+          <div class="orb" style="width:300px;height:300px;background:radial-gradient(circle,rgba(34,197,94,0.15),transparent 70%);top:20%;left:5%;animation-duration:11s;"></div>
+          <div class="orb" style="width:300px;height:300px;background:radial-gradient(circle,rgba(249,115,22,0.15),transparent 70%);bottom:15%;right:5%;animation-duration:15s;animation-delay:-3s;"></div>
+        </div>
+        <div class="grid-overlay"></div>
+        <div class="slide-accent-top"></div>
+
+        <div class="slide-content">
+          <div class="slide-label reveal d1">04 — Diferenciador</div>
+          <h2 class="reveal d2">Motor de <span class="hl">redistribución automática</span></h2>
+
+          <p class="redis-flow-desc reveal d3" style="font-size: var(--small-size); color: var(--text-2); margin-top: 0.25rem;">
+            El sistema detecta, sugiere y ejecuta traslados entre centros sin que el coordinador tenga que buscar el desequilibrio manualmente.
+          </p>
+
+          <!-- Visual diagram -->
+          <div class="redis-diagram reveal-scale d4">
+
+            <!-- Origen box -->
+            <div class="redis-box origen glass-card">
+              <div class="redis-box-label">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="5" width="10" height="8" rx="1.5" stroke="#4ade80" stroke-width="1.3"/><path d="M4.5 5V4a2.5 2.5 0 015 0v1" stroke="#4ade80" stroke-width="1.3"/></svg>
+                Centro Origen
+              </div>
+              <h3>CDMX Norte</h3>
+              <p style="font-size:var(--small-size); color:var(--text-3);">Inventario actual:</p>
+              <div class="redis-stock-row">
+                <span>Agua (1.5L)</span>
+                <span class="stock-num">↑ 320 pzas</span>
+              </div>
+              <div class="redis-stock-row">
+                <span>Cobijas</span>
+                <span class="stock-num">↑ 85 pzas</span>
+              </div>
+              <div style="margin-top:0.25rem;">
+                <span class="pill green" style="font-size:calc(var(--label-size)*0.9)">● SUPERÁVIT</span>
+              </div>
+            </div>
+
+            <!-- Arrow with label -->
+            <div class="redis-arrow">
+              <div class="arrow-line">
+                <div class="arrow-shaft"></div>
+                <div class="arrow-head"></div>
+              </div>
+              <div class="arrow-label">150 pzas agua</div>
+              <div class="arrow-label" style="margin-top:2px; background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color:#4ade80;">1 clic ✓</div>
+            </div>
+
+            <!-- Destino box -->
+            <div class="redis-box destino glass-card">
+              <div class="redis-box-label">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="5" width="10" height="8" rx="1.5" stroke="#fb923c" stroke-width="1.3"/><path d="M4.5 5V4a2.5 2.5 0 015 0v1" stroke="#fb923c" stroke-width="1.3"/></svg>
+                Centro Destino
+              </div>
+              <h3>Tlalpan Sur</h3>
+              <p style="font-size:var(--small-size); color:var(--text-3);">Inventario actual:</p>
+              <div class="redis-stock-row">
+                <span>Agua (1.5L)</span>
+                <span class="stock-num">↓ 12 pzas</span>
+              </div>
+              <div class="redis-stock-row">
+                <span>Cobijas</span>
+                <span class="stock-num">↓ 8 pzas</span>
+              </div>
+              <div style="margin-top:0.25rem;">
+                <span class="pill orange" style="font-size:calc(var(--label-size)*0.9)">● DÉFICIT</span>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="redis-cta reveal d5">
+            <div class="cta-pill">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/><path d="M5.5 8l2 2 3-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Sugerencia generada automáticamente — aprobación con 1 clic
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ====================================================
+           SLIDE 5: FUNCIONALIDADES MVP
+           ==================================================== -->
+      <section class="slide" id="slide-5" aria-label="Funcionalidades MVP">
+        <div class="grid-overlay"></div>
+        <div class="slide-accent-top"></div>
+
+        <div class="slide-content">
+          <div class="slide-label reveal d1">05 — Funcionalidades MVP</div>
+          <h2 class="reveal d2">Implementado y <span class="hl">funcional</span></h2>
+
+          <div class="mvp-grid">
+
+            <div class="mvp-item reveal d3">
+              <span class="mvp-icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.3"/><circle cx="12" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M1 15c0-2.5 2-4.5 4.5-4.5h7c2.5 0 4.5 2 4.5 4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+              </span>
+              <div class="mvp-text">
+                <strong>5 dashboards por rol</strong>
+                <span>Coordinador, encargado, voluntario, institución, campaña</span>
+              </div>
+            </div>
+
+            <div class="mvp-item reveal d3">
+              <span class="mvp-icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 9h3l2-6 3 12 2-6h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <div class="mvp-text">
+                <strong>Redistribución automática</strong>
+                <span>Detecta desequilibrios y sugiere traslados</span>
+              </div>
+            </div>
+
+            <div class="mvp-item reveal d4">
+              <span class="mvp-icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2C6.2 2 4 4.2 4 7c0 4.2 5 9 5 9s5-4.8 5-9C14 4.2 11.8 2 9 2Z" stroke="currentColor" stroke-width="1.3"/><circle cx="9" cy="7" r="2" stroke="currentColor" stroke-width="1.3"/></svg>
+              </span>
+              <div class="mvp-text">
+                <strong>Mapa interactivo</strong>
+                <span>Leaflet + Nominatim, geocodificación real México</span>
+              </div>
+            </div>
+
+            <div class="mvp-item reveal d4">
+              <span class="mvp-icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 9l3 3 5-5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="2" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.3"/></svg>
+              </span>
+              <div class="mvp-text">
+                <strong>Flujo de aprobación de merma</strong>
+                <span>Registro → revisión → aprobación/rechazo</span>
+              </div>
+            </div>
+
+            <div class="mvp-item reveal d5">
+              <span class="mvp-icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M6 9l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <div class="mvp-text">
+                <strong>Confirmación de entregas</strong>
+                <span>Instituciones confirman recepción de donaciones</span>
+              </div>
+            </div>
+
+            <div class="mvp-item reveal d5">
+              <span class="mvp-icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="10" width="4" height="6" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="7" y="6" width="4" height="10" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="12" y="2" width="4" height="14" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
+              </span>
+              <div class="mvp-text">
+                <strong>Campañas con progreso</strong>
+                <span>Metas, barras de progreso, artículos más donados</span>
+              </div>
+            </div>
+
+            <div class="mvp-item reveal d6">
+              <span class="mvp-icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 5h12M3 9h12M3 13h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M14 11l2 2-2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <div class="mvp-text">
+                <strong>Exportación CSV</strong>
+                <span>Reportes de inventario y movimientos</span>
+              </div>
+            </div>
+
+            <div class="mvp-item reveal d6">
+              <span class="mvp-icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.3"/><path d="M9 5v4l2.5 2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+              </span>
+              <div class="mvp-text">
+                <strong>Modo oscuro / claro</strong>
+                <span>UI adaptable al modo del sistema</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================
+           SLIDE 6: ARQUITECTURA / STACK
+           ==================================================== -->
+      <section class="slide" id="slide-6" aria-label="Arquitectura y Stack">
+        <div class="grid-overlay"></div>
+        <div class="slide-accent-top"></div>
+
+        <div class="slide-content">
+          <div class="slide-label reveal d1">06 — Arquitectura &amp; Stack</div>
+          <h2 class="reveal d2"><span class="hl">Tecnologías</span> que impulsan Aegis</h2>
+
+          <div class="stack-layout">
+
+            <div class="stack-group reveal d3">
+              <div class="stack-group-label">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M4 6.5h5M6.5 4v5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                Backend
+              </div>
+              <div class="stack-pills">
+                <span class="stack-pill" style="background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.3);color:#93c5fd;">Python 3</span>
+                <span class="stack-pill" style="background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);">Flask</span>
+                <span class="stack-pill" style="background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.3);color:#4ade80;">REST API</span>
+                <span class="stack-pill" style="background:rgba(168,85,247,0.12);border-color:rgba(168,85,247,0.3);color:#c084fc;">Jinja2</span>
+              </div>
+            </div>
+
+            <div class="stack-group reveal d3">
+              <div class="stack-group-label">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1.5" y="2" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 5h10" stroke="currentColor" stroke-width="1.2"/></svg>
+                Frontend
+              </div>
+              <div class="stack-pills">
+                <span class="stack-pill" style="background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.3);color:#fbbf24;">Vanilla JS</span>
+                <span class="stack-pill" style="background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);">Leaflet.js</span>
+                <span class="stack-pill" style="background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);">CSS Grid</span>
+              </div>
+            </div>
+
+            <div class="stack-group reveal d4">
+              <div class="stack-group-label">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><ellipse cx="6.5" cy="4" rx="4.5" ry="2" stroke="currentColor" stroke-width="1.2"/><path d="M2 4v5c0 1.1 2 2 4.5 2s4.5-.9 4.5-2V4" stroke="currentColor" stroke-width="1.2"/></svg>
+                Datos
+              </div>
+              <div class="stack-pills">
+                <span class="stack-pill" style="background:rgba(249,115,22,0.12);border-color:rgba(249,115,22,0.3);color:#fb923c;">SQLite</span>
+                <span class="stack-pill" style="background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.3);color:#4ade80;">SQLAlchemy</span>
+                <span class="stack-pill" style="background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);">CSV Export</span>
+              </div>
+            </div>
+
+            <div class="stack-group reveal d4">
+              <div class="stack-group-label">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M2 6.5h9M6.5 2c-1.5 1.5-2 2.8-2 4.5s.5 3 2 4.5M6.5 2c1.5 1.5 2 2.8 2 4.5s-.5 3-2 4.5" stroke="currentColor" stroke-width="1.2"/></svg>
+                Servicios externos
+              </div>
+              <div class="stack-pills">
+                <span class="stack-pill" style="background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);">Nominatim</span>
+                <span class="stack-pill" style="background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.3);color:#4ade80;">OpenStreetMap</span>
+                <span class="stack-pill" style="background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.3);color:#fbbf24;">Claude API</span>
+              </div>
+            </div>
+
+            <!-- Architecture flow row -->
+            <div class="arch-diagram reveal d5">
+              <span class="arch-node"><strong style="color:var(--text-1)">Browser</strong></span>
+              <span class="arch-arrow">→</span>
+              <span class="arch-node"><strong style="color:rgba(255,255,255,0.8)">Flask Routes</strong></span>
+              <span class="arch-arrow">→</span>
+              <span class="arch-node"><strong style="color:var(--text-1)">Auth / RBAC</strong></span>
+              <span class="arch-arrow">→</span>
+              <span class="arch-node"><strong style="color:#4ade80">Business Logic</strong></span>
+              <span class="arch-arrow">→</span>
+              <span class="arch-node"><strong style="color:#fb923c">SQLite</strong></span>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================
+           SLIDE 7: MAPA INTERACTIVO
+           ==================================================== -->
+      <section class="slide" id="slide-7" aria-label="Mapa Interactivo">
+        <div class="mesh-bg">
+          <div class="orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(255,255,255,0.05),transparent 70%);top:10%;right:-5%;animation-duration:13s;"></div>
+        </div>
+        <div class="grid-overlay"></div>
+        <div class="slide-accent-top"></div>
+
+        <div class="slide-content">
+          <div class="slide-label reveal d1">07 — Mapa Interactivo</div>
+          <h2 class="reveal d2">Geocodificación real con <span class="hl">Leaflet.js</span></h2>
+
+          <div class="map-layout">
+
+            <!-- Left: feature list -->
+            <div class="map-features-list reveal-left d3">
+              <div class="map-feat">
+                <span class="icon">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2C6.2 2 4 4.2 4 7c0 4.2 5 9 5 9s5-4.8 5-9C14 4.2 11.8 2 9 2Z" stroke="currentColor" stroke-width="1.3"/><circle cx="9" cy="7" r="2" stroke="currentColor" stroke-width="1.3"/></svg>
+                </span>
+                <div>
+                  <strong style="font-size:var(--small-size); color:var(--text-1); display:block;">Direcciones reales de México</strong>
+                  <span style="font-size:calc(var(--small-size)*0.9); color:var(--text-3);">Nominatim + OpenStreetMap geocodifica calles, colonias y municipios mexicanos</span>
+                </div>
+              </div>
+              <div class="map-feat">
+                <span class="icon">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.3"/><path d="M6 9h6M9 6v6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                </span>
+                <div>
+                  <strong style="font-size:var(--small-size); color:var(--text-1); display:block;">Pin arrastrable</strong>
+                  <span style="font-size:calc(var(--small-size)*0.9); color:var(--text-3);">El encargado ajusta la posición exacta del centro con drag &amp; drop</span>
+                </div>
+              </div>
+              <div class="map-feat">
+                <span class="icon">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 9h12M12 6l3 3-3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <div>
+                  <strong style="font-size:var(--small-size); color:var(--text-1); display:block;">Rutas de traslado</strong>
+                  <span style="font-size:calc(var(--small-size)*0.9); color:var(--text-3);">Visualiza los traslados sugeridos entre centros como líneas en el mapa</span>
+                </div>
+              </div>
+              <div class="map-feat">
+                <span class="icon">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="4" stroke="currentColor" stroke-width="1.3"/><circle cx="9" cy="9" r="1.5" fill="currentColor"/><path d="M9 2v2M9 14v2M2 9h2M14 9h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                </span>
+                <div>
+                  <strong style="font-size:var(--small-size); color:var(--text-1); display:block;">Marcadores por estado</strong>
+                  <span style="font-size:calc(var(--small-size)*0.9); color:var(--text-3);">Verde = operativo, naranja = alerta de stock, rojo = cerrado</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: mockup -->
+            <div class="map-mockup reveal-right d4">
+              <div class="map-bg"></div>
+
+              <!-- Simulated roads -->
+              <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:0.15" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                <line x1="0" y1="100" x2="400" y2="120" stroke="#ffffff" stroke-width="1"/>
+                <line x1="0" y1="180" x2="400" y2="200" stroke="#ffffff" stroke-width="1"/>
+                <line x1="120" y1="0" x2="100" y2="300" stroke="#ffffff" stroke-width="1"/>
+                <line x1="250" y1="0" x2="270" y2="300" stroke="#ffffff" stroke-width="1"/>
+                <line x1="50" y1="50" x2="350" y2="250" stroke="#ffffff" stroke-width="0.5" stroke-dasharray="4,4"/>
+                <!-- Transfer route line -->
+                <line x1="100" y1="110" x2="270" y2="170" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.8"/>
+              </svg>
+
+              <!-- Map pins -->
+              <div class="map-pin green"  style="top:33%;left:24%"></div>
+              <div class="map-pin white"  style="top:56%;left:67%"></div>
+              <div class="map-pin orange" style="top:20%;left:60%"></div>
+              <div class="map-pin gray"   style="top:70%;left:35%"></div>
+              <div class="map-pin rose"   style="top:45%;left:80%"></div>
+
+              <!-- Tooltip -->
+              <div class="map-tooltip" style="top:15%;left:22%">
+                <strong style="color:var(--text-1); font-size:0.75em;">CDMX Norte</strong><br/>
+                <span style="color:#4ade80; font-size:0.7em;">● Operativo · 320 artículos</span>
+              </div>
+
+              <div class="map-label">Leaflet + Nominatim — OpenStreetMap</div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================
+           SLIDE 8: CUENTAS DE PRUEBA
+           ==================================================== -->
+      <section class="slide" id="slide-8" aria-label="Cuentas de Prueba">
+        <div class="grid-overlay"></div>
+        <div class="slide-accent-top"></div>
+
+        <div class="slide-content">
+          <div class="slide-label reveal d1">08 — Demo en vivo</div>
+          <h2 class="reveal d2">Cuentas de <span class="hl">prueba</span></h2>
+
+          <div class="demo-table-wrap reveal d3">
+            <table class="demo-table">
+              <thead>
+                <tr>
+                  <th>Usuario</th>
+                  <th>Contraseña</th>
+                  <th>Rol</th>
+                  <th>Acceso a</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>ana_coord</td>
+                  <td>coord2026</td>
+                  <td>
+                    <span class="role-badge pill white">
+                      <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1L6.8 4.2H10L7.4 6.4 8.3 9.6 5.5 7.8 2.7 9.6l.9-3.2L1 4.2h3.2L5.5 1Z" fill="currentColor"/></svg>
+                      Coordinadora
+                    </span>
+                  </td>
+                  <td style="color:var(--text-3);">Panel global, mermas, redistribución</td>
+                </tr>
+                <tr>
+                  <td>carlos_enc</td>
+                  <td>norte2026</td>
+                  <td>
+                    <span class="role-badge pill">
+                      <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><rect x="1.5" y="3.5" width="8" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M3.5 3.5V3a2 2 0 014 0v.5" stroke="currentColor" stroke-width="1.2"/></svg>
+                      Encargado
+                    </span>
+                  </td>
+                  <td style="color:var(--text-3);">Inventario, mermas, traslados</td>
+                </tr>
+                <tr>
+                  <td>sofia_vol</td>
+                  <td>vol2026</td>
+                  <td>
+                    <span class="role-badge pill">
+                      <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1C3.6 1 2 2.6 2 4.5 2 5.8 2.7 7 3.8 7.6L5 10h1L7.2 7.6C8.3 7 9 5.8 9 4.5 9 2.6 7.4 1 5.5 1Z" stroke="currentColor" stroke-width="1.1"/></svg>
+                      Voluntaria
+                    </span>
+                  </td>
+                  <td style="color:var(--text-3);">Registro de entradas de donación</td>
+                </tr>
+                <tr>
+                  <td>hospital_civil</td>
+                  <td>hosp2026</td>
+                  <td>
+                    <span class="role-badge pill orange">
+                      <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M5.5 4.5v2M4.5 5.5h2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                      Institución
+                    </span>
+                  </td>
+                  <td style="color:var(--text-3);">Confirmar recepción de entregas</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="demo-note reveal d4">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2L14.5 13.5H1.5L8 2Z" stroke="#fb923c" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 6.5v3" stroke="#fb923c" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11" r="0.8" fill="#fb923c"/></svg>
+            <span>Demo técnica — contraseñas en texto plano. En producción: bcrypt + HTTPS.</span>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ====================================================
+           SLIDE 9: IA UTILIZADA
+           ==================================================== -->
+      <section class="slide" id="slide-9" aria-label="IA Utilizada">
+        <div class="mesh-bg">
+          <div class="orb" style="width:350px;height:350px;background:radial-gradient(circle,rgba(255,255,255,0.05),transparent 70%);bottom:5%;right:5%;animation-duration:11s;"></div>
+        </div>
+        <div class="grid-overlay"></div>
+        <div class="slide-accent-top"></div>
+
+        <div class="slide-content">
+          <div class="slide-label reveal d1">09 — Uso de Inteligencia Artificial</div>
+          <h2 class="reveal d2">Desarrollo <span class="hl">asistido por IA</span></h2>
+
+          <div class="ia-layout">
+
+            <div class="ia-main-card reveal-left d3">
+              <div class="ia-logo">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="8" y="8" width="32" height="32" rx="8" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+                  <path d="M16 24h4M28 24h4M24 16v4M24 28v4" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+                  <circle cx="24" cy="24" r="4" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
+                  <circle cx="16" cy="16" r="2" fill="rgba(255,255,255,0.4)"/>
+                  <circle cx="32" cy="16" r="2" fill="rgba(255,255,255,0.4)"/>
+                  <circle cx="16" cy="32" r="2" fill="rgba(255,255,255,0.4)"/>
+                  <circle cx="32" cy="32" r="2" fill="rgba(255,255,255,0.4)"/>
+                </svg>
+              </div>
+              <h3 style="color:rgba(255,255,255,0.9); font-size:var(--h3-size); margin-top:0.4rem;">Claude (Anthropic)</h3>
+              <p style="font-size:var(--small-size); margin-top:0.4rem; color:var(--text-3);">Asistente de código principal durante el hackathon</p>
+            </div>
+
+            <div class="ia-uses reveal-right d4">
+              <div class="ia-use-item">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M2 4h7M2 10h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                Generación de funciones Flask y endpoints REST
+              </div>
+              <div class="ia-use-item">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><ellipse cx="7" cy="4" rx="5" ry="2" stroke="currentColor" stroke-width="1.2"/><path d="M2 4v6c0 1.1 2.2 2 5 2s5-.9 5-2V4" stroke="currentColor" stroke-width="1.2"/></svg>
+                Diseño del esquema de base de datos SQLAlchemy
+              </div>
+              <div class="ia-use-item">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M9 5l2 2-2 2M5 5L3 7l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Motor de detección de desequilibrios (redistribución)
+              </div>
+              <div class="ia-use-item">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="2" width="10" height="10" rx="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 7h4M7 5v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                CSS glassmorphism y componentes de UI
+              </div>
+              <div class="ia-use-item">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M7 4.5V7l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                Debugging y refactorización de código
+              </div>
+              <div class="ia-use-item">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 7l2 2 2-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="2" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/></svg>
+                Revisión de lógica de negocio
+              </div>
+            </div>
+
+          </div>
+
+          <div class="ia-disclaimer reveal d5">
+            <strong style="color:rgba(255,255,255,0.8);">Transparencia:</strong> Todo el código generado por Claude fue revisado, integrado y validado por el equipo Larpers. La IA actuó como par de programación, no como reemplazo del criterio humano. El diseño del sistema, la arquitectura y las decisiones de producto fueron del equipo.
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ====================================================
+           SLIDE 10: LIMITACIONES & PROXIMOS PASOS
+           ==================================================== -->
+      <section class="slide" id="slide-10" aria-label="Limitaciones y Próximos Pasos">
+        <div class="grid-overlay"></div>
+        <div class="slide-accent-top"></div>
+
+        <div class="slide-content">
+          <div class="slide-label reveal d1">10 — Roadmap</div>
+          <h2 class="reveal d2"><span class="hl">Limitaciones</span> actuales &amp; próximos pasos</h2>
+
+          <div class="two-col">
+
+            <div class="two-col-card lim reveal-left d3">
+              <div class="col-header">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3L20 19H2L11 3Z" stroke="#fb7185" stroke-width="1.5" stroke-linejoin="round"/><path d="M11 9v4" stroke="#fb7185" stroke-width="1.8" stroke-linecap="round"/><circle cx="11" cy="15.5" r="1" fill="#fb7185"/></svg>
+                <span class="col-title">Limitaciones (demo)</span>
+              </div>
+              <ul class="col-list">
+                <li>
+                  <span class="col-bullet">→</span>
+                  Contraseñas en texto plano — sólo para demo
+                </li>
+                <li>
+                  <span class="col-bullet">→</span>
+                  Sin sincronización multi-usuario en tiempo real (no WebSockets)
+                </li>
+                <li>
+                  <span class="col-bullet">→</span>
+                  SQLite no escala a producción de alto volumen
+                </li>
+                <li>
+                  <span class="col-bullet">→</span>
+                  Sin notificaciones por email o push automáticas
+                </li>
+                <li>
+                  <span class="col-bullet">→</span>
+                  Sin app móvil nativa ni escaneo QR
+                </li>
+              </ul>
+            </div>
+
+            <div class="two-col-card next reveal-right d4">
+              <div class="col-header">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3v6l4-3-4 12-4-12 4 3V3Z" stroke="#4ade80" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                <span class="col-title">Próximos pasos</span>
+              </div>
+              <ul class="col-list">
+                <li>
+                  <span class="col-bullet" style="color:#4ade80">✓</span>
+                  <strong style="color:var(--text-1)">bcrypt</strong> para hashing seguro de contraseñas
+                </li>
+                <li>
+                  <span class="col-bullet" style="color:#4ade80">✓</span>
+                  <strong style="color:var(--text-1)">WebSockets</strong> para actualización en tiempo real
+                </li>
+                <li>
+                  <span class="col-bullet" style="color:#4ade80">✓</span>
+                  <strong style="color:var(--text-1)">PostgreSQL</strong> para escala de producción
+                </li>
+                <li>
+                  <span class="col-bullet" style="color:#4ade80">✓</span>
+                  <strong style="color:var(--text-1)">Email/notificaciones</strong> push automáticas
+                </li>
+                <li>
+                  <span class="col-bullet" style="color:#4ade80">✓</span>
+                  <strong style="color:var(--text-1)">QR scanning</strong> para registro rápido de artículos
+                </li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================
+           SLIDE 11: EQUIPO — CLOSING
+           ==================================================== -->
+      <section class="slide" id="slide-11" aria-label="Equipo Larpers">
+        <div class="mesh-bg">
+          <div class="orb" style="width:600px;height:600px;background:radial-gradient(circle,rgba(255,255,255,0.06),transparent 65%);top:50%;left:50%;transform:translate(-50%,-50%);animation-duration:15s;"></div>
+          <div class="orb" style="width:300px;height:300px;background:radial-gradient(circle,rgba(255,255,255,0.04),transparent 70%);top:10%;right:10%;animation-duration:10s;animation-delay:-3s;"></div>
+          <div class="orb" style="width:250px;height:250px;background:radial-gradient(circle,rgba(255,255,255,0.03),transparent 70%);bottom:10%;left:10%;animation-duration:12s;animation-delay:-6s;"></div>
+        </div>
+        <div class="grid-overlay"></div>
+        <div class="slide-accent-top"></div>
+
+        <div class="slide-content">
+          <div class="closing-inner">
+
+            <div class="closing-logo reveal-scale d1">
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 4L35 30H5L20 4Z" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linejoin="round"/>
+                <circle cx="20" cy="20" r="5" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+                <path d="M20 15v-5M20 25v5M15 20H10M30 20h-5" stroke="rgba(255,255,255,0.4)" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+            </div>
+
+            <div class="reveal d2">
+              <div class="slide-label" style="text-align:center;">11 — Equipo</div>
+            </div>
+
+            <h1 class="reveal d2" style="text-align:center;">
+              <span class="title-accent">Larpers</span>
+            </h1>
+
+            <p class="reveal d3" style="max-width:52ch; text-align:center; font-size:var(--body-size);">
+              Construimos <strong style="color:var(--text-1)">Aegis</strong> para que ningún recurso de ayuda humanitaria se pierda por falta de información. Centros conectados, comunidades mejor atendidas.
+            </p>
+
+            <!-- Team names -->
+            <div class="team-names reveal d4">
+              <div class="team-name">Pablo Cerda Calvillo</div>
+              <div class="team-name">Enrique Alejandro Herrera Reynosa</div>
+              <div class="team-name">Joseph Alexander Perez Rivera</div>
+            </div>
+
+            <div class="closing-links reveal d4">
+              <span class="pill white">Python · Flask</span>
+              <span class="pill white">Leaflet.js</span>
+              <span class="pill white">Claude AI</span>
+              <span class="pill green">Redistribución automática</span>
+            </div>
+
+            <!-- Demo link -->
+            <div class="reveal d5">
+              <a href="https://aegis-vmz2.onrender.com/" target="_blank" rel="noopener noreferrer" class="demo-link-btn">
+                Ver demo en vivo →
+              </a>
+            </div>
+
+            <p class="reveal d6" style="font-size:var(--label-size); color:var(--text-3); text-align:center; font-family:var(--font-mono); letter-spacing:0.05em;">
+              Larpers · Hackathon 2026 · Aegis v1.0
+            </p>
+
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /slides-track -->
+  </div><!-- /slides-wrapper -->
+
+  <!-- ===========================================
+       JAVASCRIPT — SLIDE PRESENTATION CONTROLLER
+       =========================================== -->
+  <script>
+    (function () {
+      'use strict';
+
+      const TOTAL = 11;
+      let current = 0;
+      let isAnimating = false;
+
+      const track        = document.getElementById('slides-track');
+      const progressBar  = document.getElementById('progress-bar');
+      const counter      = document.getElementById('slide-counter');
+      const navDotsEl    = document.getElementById('nav-dots');
+      const slides       = document.querySelectorAll('.slide');
+
+      // Build nav dots
+      navDotsEl.innerHTML = '';
+      slides.forEach((_, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'nav-dot' + (i === 0 ? ' active' : '');
+        btn.setAttribute('aria-label', `Ir a diapositiva ${i + 1}`);
+        btn.addEventListener('click', () => goTo(i));
+        navDotsEl.appendChild(btn);
+      });
+
+      function updateUI(idx) {
+        const pct = ((idx + 1) / TOTAL) * 100;
+        progressBar.style.width = pct + '%';
+        counter.textContent = (idx + 1) + ' / ' + TOTAL;
+        navDotsEl.querySelectorAll('.nav-dot').forEach((dot, i) => {
+          dot.classList.toggle('active', i === idx);
+        });
+      }
+
+      function activateSlide(idx) {
+        slides.forEach((slide, i) => {
+          if (i === idx) {
+            slide.classList.add('visible');
+          } else {
+            slide.classList.remove('visible');
+          }
+        });
+      }
+
+      function goTo(idx) {
+        if (isAnimating) return;
+        if (idx < 0 || idx >= TOTAL) return;
+        if (idx === current) return;
+
+        isAnimating = true;
+        current = idx;
+
+        track.style.transform = 'translateY(calc(-' + idx + ' * 100vh))';
+
+        updateUI(idx);
+
+        const onTransitionEnd = () => {
+          isAnimating = false;
+          track.removeEventListener('transitionend', onTransitionEnd);
+        };
+        track.addEventListener('transitionend', onTransitionEnd);
+
+        setTimeout(() => activateSlide(idx), 100);
+      }
+
+      document.addEventListener('keydown', (e) => {
+        switch (e.key) {
+          case 'ArrowRight':
+          case 'ArrowDown':
+          case ' ':
+            e.preventDefault();
+            goTo(current + 1);
+            break;
+          case 'ArrowLeft':
+          case 'ArrowUp':
+            e.preventDefault();
+            goTo(current - 1);
+            break;
+          case 'Home':
+            e.preventDefault();
+            goTo(0);
+            break;
+          case 'End':
+            e.preventDefault();
+            goTo(TOTAL - 1);
+            break;
+        }
+      });
+
+      let touchStartX = 0;
+      let touchStartY = 0;
+
+      document.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }, { passive: true });
+
+      document.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        const dy = e.changedTouches[0].clientY - touchStartY;
+        if (Math.abs(dy) > Math.abs(dx)) {
+          if (dy < -40) goTo(current + 1);
+          if (dy > 40)  goTo(current - 1);
+        }
+      }, { passive: true });
+
+      let wheelCooldown = false;
+
+      document.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        if (wheelCooldown) return;
+        wheelCooldown = true;
+        if (e.deltaY > 20)  goTo(current + 1);
+        if (e.deltaY < -20) goTo(current - 1);
+        setTimeout(() => { wheelCooldown = false; }, 800);
+      }, { passive: false });
+
+      updateUI(0);
+      setTimeout(() => activateSlide(0), 50);
+
+    })();
+  </script>
+
+</body>
+</html>
